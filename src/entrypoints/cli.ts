@@ -21,8 +21,9 @@ program
   .description(
     "Checks whether the repository is compliant with the Reuse Specification."
   )
-  .action(async () => {
-    validate(new GitSource());
+  .option("-a, --all", "Check all files in the repository")
+  .action(async (options) => {
+    await validate(new GitSource(options.all));
   });
 
-program.parse();
+  program.parse(process.argv);
