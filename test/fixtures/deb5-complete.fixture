@@ -1,0 +1,76 @@
+{
+    "header": {
+        "format": "http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/",
+        "source": "http://www.example.com/code/venus",
+        "upstreamContact": "John Doe <jdoe@example.com>",
+        "upstreamName": "Planet Venus"
+    },
+    "files": [
+        {
+            "files": [
+                "*"
+            ],
+            "copyright": [
+                "2008, John Doe <jdoe@example.com>",
+                "2007, Jane Smith <jsmith@example.org>",
+                "2007, Joe Average <joe@example.org>",
+                "2007, J. Random User <jr@users.example.com>"
+            ],
+            "license": "PSF-2"
+        },
+        {
+            "files": [
+                "debian/*"
+            ],
+            "copyright": [
+                "2008, Dan Developer <dan@debian.example.com>"
+            ],
+            "license": "permissive"
+        },
+        {
+            "files": [
+                "debian/patches/theme-diveintomark.patch"
+            ],
+            "copyright": [
+                "2008, Joe Hacker <hack@example.org>"
+            ],
+            "license": "GPL-2+"
+        },
+        {
+            "files": [
+                "planet/vendor/compat_logging/*"
+            ],
+            "copyright": [
+                "2002, Mark Smith <msmith@example.org>"
+            ],
+            "license": "MIT"
+        },
+        {
+            "files": [
+                "planet/vendor/httplib2/*"
+            ],
+            "copyright": [
+                "2006, John Brown <brown@example.org>"
+            ],
+            "license": "MIT2"
+        },
+        {
+            "files": [
+                "planet/vendor/feedparser.py"
+            ],
+            "copyright": [
+                "2007, Mike Smith <mike@example.org>"
+            ],
+            "license": "PSF-2"
+        },
+        {
+            "files": [
+                "planet/vendor/htmltmpl.py"
+            ],
+            "copyright": [
+                "2004, Thomas Brown <coder@example.org>"
+            ],
+            "license": "GPL-2+"
+        }
+    ]
+}
