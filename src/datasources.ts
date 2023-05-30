@@ -31,7 +31,7 @@ interface IDataSource {
  * Git data source for determining which files need to be validated.
  */
 class GitSource implements IDataSource {
-  __ROOT_PATH: string | undefined = undefined
+  __ROOT_PATH: string | undefined = undefined;
   modified: boolean;
 
   constructor(all: boolean = false) {
@@ -95,6 +95,7 @@ class GitSource implements IDataSource {
 
     const status = await simpleGit(rootPath).status()
 
+    // TODO: Remove these for loops in favor of a more generic solution
     for (const file of status.not_added) {
       changedFiles.push({
         source: file.endsWith(".license") ? "license" : "original",

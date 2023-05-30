@@ -1,11 +1,11 @@
 {
-  "name": "reuse-bot",
+  "name": "reuse-me",
   "version": "0.0.1",
   "private": true,
-  "description": "Copyright and License management bot",
+  "description": "Copyright and License management solutions for GitHub",
   "author": "Kevin de Jong",
   "license": "GPL-3.0-or-later",
-  "homepage": "https://github.com//",
+  "homepage": "https://github.com/dev-build-deploy/reuse-me",
   "keywords": [
     "probot",
     "github",
