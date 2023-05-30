@@ -7,8 +7,9 @@ SPDX-License-Identifier: GPL-3.0-or-later
 import simpleGit from "simple-git";
 import { IFile, IFileModification } from "./interfaces";
 
-import * as github from "./github";
 import * as fs from "fs";
+import * as github from "./github";
+import * as glob from "glob";
 
 interface IDataSource {
   /**
@@ -31,13 +32,16 @@ interface IDataSource {
  */
 class GitSource implements IDataSource {
   __ROOT_PATH: string | undefined = undefined
+  modified: boolean;
 
-  constructor(rootPath?: string) {
-    if (rootPath) {
-      this.__ROOT_PATH = rootPath;
-    }
+  constructor(all: boolean = false) {
+    this.modified = !all;
   }
 
+  /**
+   * Get the root directory for the repository
+   * @returns The root directory of the repository
+   */
   private async getRootPath(): Promise<string> {
     if (this.__ROOT_PATH === undefined) {
       this.__ROOT_PATH = await simpleGit().revparse({ '--show-toplevel': null })
@@ -46,11 +50,51 @@ class GitSource implements IDataSource {
     return this.__ROOT_PATH
   }
 
+  /**
+   * Retrieve the files ignored based on `.gitignore`
+   * @param rootPath The root path of the repository
+   * @returns The list of ignored files
+   */
+  private async getIgnoredFiles(rootPath: string): Promise<string[]> {
+    try {
+      const ignored = await simpleGit().raw([
+        "ls-files",
+        "--others",
+        "--ignored",
+        "--exclude-standard",
+        rootPath,
+      ]);
+      return ignored.split("\n");
+    } catch (GitError) {
+      return [];
+    }
+  }
+
   public async getChangedFiles(): Promise<IFile[]> {
+    const changedFiles: IFile[] = [];
     const rootPath = await this.getRootPath()
+
+    if (this.modified === false) {
+      const ignored = await this.getIgnoredFiles(rootPath);
+      const files = glob.globSync("**/*");
+      for (const file of files) {
+        // Skip directories
+        if (fs.lstatSync(file).isDirectory()) continue;
+        if (ignored.includes(file)) continue;
+
+        changedFiles.push({
+          source: file.endsWith(".license") ? "license" : "original",
+          filePath: file.endsWith(".license") ? file.replace(".license", "") : file,
+          licensePath: file.endsWith(".license") ? file : `${file}.license`,
+          modification: "modified"
+        });
+      }
+
+      return changedFiles;
+    }
+
     const status = await simpleGit(rootPath).status()
 
-    const changedFiles: IFile[] = [];
     for (const file of status.not_added) {
       changedFiles.push({
         source: file.endsWith(".license") ? "license" : "original",
