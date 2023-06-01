@@ -46,7 +46,7 @@ describe("getSPDXHeader", () => {
       const contents = fs.readFileSync(`${FIXTURES_BASE_DIR}/${validHeader}`, "utf8");
       const fixture = JSON.parse(fs.readFileSync(`${FIXTURES_BASE_DIR}/${validHeader}.fixture`, "utf8"));
       const header = spdx.getSPDXHeader(contents);
-      
+
       expect(header).toBeDefined();
       expect(header).toStrictEqual(fixture)
     }
@@ -64,7 +64,7 @@ describe("getSPDXHeader", () => {
       const contents = fs.readFileSync(`${FIXTURES_BASE_DIR}/${validHeader}`, "utf8");
       const fixture = JSON.parse(fs.readFileSync(`${FIXTURES_BASE_DIR}/${validHeader}.fixture`, "utf8"));
       const header = spdx.getSPDXHeader(contents);
-      
+
       expect(header).toBeDefined();
       expect(header).toStrictEqual(fixture)
     }

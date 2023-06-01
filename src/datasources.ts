@@ -9,7 +9,6 @@ import { IFile, IFileModification } from "./interfaces";
 
 import * as fs from "fs";
 import * as github from "./github";
-import * as glob from "glob";
 
 interface IDataSource {
   /**
@@ -55,16 +54,18 @@ class GitSource implements IDataSource {
    * @param rootPath The root path of the repository
    * @returns The list of ignored files
    */
-  private async getIgnoredFiles(rootPath: string): Promise<string[]> {
+  private async listFiles(rootPath: string): Promise<string[]> {
     try {
       const ignored = await simpleGit().raw([
         "ls-files",
-        "--others",
-        "--ignored",
         "--exclude-standard",
+        "--full-name",
         rootPath,
       ]);
-      return ignored.split("\n");
+      // Remove the last empty line
+      return ignored.split("\n").filter(file => {
+        return (file.trim() && !fs.lstatSync(file).isDirectory())
+      });
     } catch (GitError) {
       return [];
     }
@@ -75,13 +76,8 @@ class GitSource implements IDataSource {
     const rootPath = await this.getRootPath()
 
     if (this.modified === false) {
-      const ignored = await this.getIgnoredFiles(rootPath);
-      const files = glob.globSync("**/*");
+      const files = await this.listFiles(rootPath);
       for (const file of files) {
-        // Skip directories
-        if (fs.lstatSync(file).isDirectory()) continue;
-        if (ignored.includes(file)) continue;
-
         changedFiles.push({
           source: file.endsWith(".license") ? "license" : "original",
           filePath: file.endsWith(".license") ? file.replace(".license", "") : file,
@@ -143,19 +139,20 @@ class GitSource implements IDataSource {
 /**
  * GitHub data source for determining which files need to be validated.
  */
-class GitHubSource implements IDataSource {
-  context: any;
+class CommitsSource implements IDataSource {
+  octokit: any;
+  commits: any;
 
-  constructor(context: any) {
-    this.context = context;
+  constructor(octokit: any, commits: any) {
+    this.octokit = octokit;
+    this.commits = commits;
   }
 
   public async getChangedFiles(): Promise<IFile[]> {
-    const payload = this.context.payload;
-    if (!payload.commits) return [];
+    if (!this.commits) return [];
 
     const changedFiles: IFile[] = [];
-    for (const commit of payload.commits) {
+    for (const commit of this.commits) {
       for (const modification of ["added", "modified", "removed"]) {
         for (const file of commit[modification]) {
           changedFiles.push({
@@ -172,8 +169,8 @@ class GitHubSource implements IDataSource {
   }
 
   public async getFileContents(file: string): Promise<string> {
-    return await github.getFileContents(this.context, file);
+    return await github.getFileContents(this.octokit, file);
   }
 }
 
-export { IDataSource, GitSource, GitHubSource }
+export { IDataSource, GitSource, CommitsSource }
