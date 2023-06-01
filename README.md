@@ -41,7 +41,7 @@ $ ./lib/cli/index.js check
 ✅ lib/probot/index.js
 ✅ src/datasources.ts
 ----------------------------------------
-✅ Found no REUSE compliance issues.
+❌ Found 1 REUSE compliance issues.
 ```
 
 _You can find more details in the [dedicated documentation](./docs/cli.md)_
