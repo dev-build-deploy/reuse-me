@@ -22,7 +22,7 @@ _Please refer to the [Reuse specification] for more details._
 
 ## Command Line Interface
 
-The CLI tool can be used for local operations around your gith repository, incl:
+The CLI tool can be used for local operations around your git repository, incl:
 
 - Validation of locally modified files
 - Full validation of your repository
