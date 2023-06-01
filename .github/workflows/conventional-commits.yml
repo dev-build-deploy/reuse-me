@@ -4,19 +4,24 @@
 
 ---
 
-name: Copyright & Licenses
+name: Conventional Commits
 on:
   pull_request:
 
 permissions:
   contents: read
-  pull-requests: read
+  issues: write
+  pull-requests: write
 
 jobs:
-  reuse-me:
-    name: REUSE compliance
+  commit-message:
+    name: Conventional Commits Compliance
     runs-on: ubuntu-latest
+
     steps:
-      - uses: dev-build-deploy/reuse-me@v0
+      - uses: actions/checkout@v3
+
+      - name: Run Commisery
+        uses: tomtom-international/commisery-action@v2
         with:
           token: ${{ github.token }}
