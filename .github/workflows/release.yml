@@ -13,6 +13,10 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write
+  pull-requests: read
+
 jobs:
   github-release:
     name: Create GitHub Release
