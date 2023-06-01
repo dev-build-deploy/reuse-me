@@ -4,7 +4,7 @@ SPDX-FileCopyrightText: 2023 Kevin de Jong <monkaii@hotmail.com>
 SPDX-License-Identifier: GPL-3.0-or-later
 */
 
-import simpleGit from "simple-git";
+import simpleGit, { StatusResultRenamed } from "simple-git";
 import { IFile, IFileModification } from "./interfaces";
 
 import * as fs from "fs";
@@ -91,45 +91,38 @@ class GitSource implements IDataSource {
 
     const status = await simpleGit(rootPath).status()
 
-    // TODO: Remove these for loops in favor of a more generic solution
-    for (const file of status.not_added) {
-      changedFiles.push({
+    /**
+     * Creates a single file entry
+     * @param file File path
+     * @param modification File modification type
+     * @returns File dictionary
+     */
+    const createFileEntry = (file: string, modification: IFileModification): IFile => {
+      return {
         source: file.endsWith(".license") ? "license" : "original",
         filePath: file.endsWith(".license") ? file.replace(".license", "") : file,
         licensePath: file.endsWith(".license") ? file : `${file}.license`,
-        modification: "added"
-      });
+        modification: modification
+      }
     }
-    for (const file of status.created) {
-      changedFiles.push({
-        source: file.endsWith(".license") ? "license" : "original",
-        filePath: file.endsWith(".license") ? file.replace(".license", "") : file,
-        licensePath: file.endsWith(".license") ? file : `${file}.license`,
-        modification: "added"
-      });
-    }
-    for (const file of status.modified) {
-      changedFiles.push({
-        source: file.endsWith(".license") ? "license" : "original",
-        filePath: file.endsWith(".license") ? file.replace(".license", "") : file,
-        licensePath: file.endsWith(".license") ? file : `${file}.license`,
-        modification: "modified"
-      });
-    }
-    for (const file of status.deleted) {
-      changedFiles.push({
-        source: file.endsWith(".license") ? "license" : "original",
-        filePath: file.endsWith(".license") ? file.replace(".license", "") : file,
-        licensePath: file.endsWith(".license") ? file : `${file}.license`,
-        modification: "removed"
-      });
-    }
+
+    status.created.forEach((file: string) => { changedFiles.push(createFileEntry(file, "added")) })
+    status.not_added.forEach((file: string) => { changedFiles.push(createFileEntry(file, "added")) })
+
+    status.modified.forEach((file: string) => { changedFiles.push(createFileEntry(file, "modified")) })
+
+    status.deleted.forEach((file: string) => { changedFiles.push(createFileEntry(file, "removed")) })
+    status.renamed.forEach((rename: StatusResultRenamed) => {
+      changedFiles.push(createFileEntry(rename.from, "removed"))
+      changedFiles.push(createFileEntry(rename.to, "added"))
+    })
 
     return changedFiles;
   }
 
   public async getFileContents(file: string): Promise<string> {
     if (fs.existsSync(file) === false) {
+      // TOO: Determine whether we need to handle this use case.
       return "";
     }
     return fs.readFileSync(file, "utf8");
