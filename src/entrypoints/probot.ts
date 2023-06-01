@@ -5,14 +5,20 @@ SPDX-License-Identifier: GPL-3.0-or-later
 */
 
 import { ISPDXHeader } from "../interfaces";
-import { GitHubSource } from "../datasources";
+import { CommitsSource } from "../datasources";
 import { Probot } from "probot";
 
 import * as spdx from "../spdx";
 import * as github from "../github";
 
+/**
+ * Handles the push event, validating modified files for REUSE compliance.
+ * @param context 
+ */
 const onPush = async (context: any) => {
-  const datasource = new GitHubSource(context);
+  github.setRepositoryContext(context.repo.owner, context.repo.repo, context.payload.ref);
+
+  const datasource = new CommitsSource(context.octokit, context.payload.commits);
   const issues = await github.getIssues(context);
 
   for (let file of await datasource.getChangedFiles()) {

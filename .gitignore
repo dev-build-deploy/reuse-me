@@ -8,4 +8,3 @@ npm-debug.log
 !mock-cert.pem
 .env
 coverage
-lib

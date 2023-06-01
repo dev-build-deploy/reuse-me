@@ -10,7 +10,7 @@ import * as fs from "fs";
 const FIXTURES_BASE_DIR = `${__dirname}/fixtures`;
 
 /**
- * Validates the SPDX header of a file.
+ * Validates parsing of a Debian Package configuration file
  */
 describe("getDebianConfig", () => {
   /**

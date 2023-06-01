@@ -1,9 +1,17 @@
-import { glob } from "glob"
-import { ISPDXHeader } from "./interfaces"
+/* 
+SPDX-FileCopyrightText: 2023 Kevin de Jong <monkaii@hotmail.com>
+
+SPDX-License-Identifier: GPL-3.0-or-later
+*/
+
+import { IFile, ISPDXHeader } from "./interfaces"
 import * as spdx from "./spdx"
 
 /**
  * Debian Package
+ * @interface IDebianPackage
+ * @member header Debian Header
+ * @member files List of file-stanzas
  */
 interface IDebianPackage {
   header: IDebianHeader,
@@ -13,6 +21,14 @@ interface IDebianPackage {
 /**
  * Debian Header
  * @interface IDebianHeader
+ * @member format The package format version
+ * @member upstreamName The name of the upstream project
+ * @member upstreamContact The contact information of the upstream project
+ * @member source The source location of the upstream project
+ * @member disclaimer Disclaimer message
+ * @member comment Additional comments
+ * @member license Software License
+ * @member copyright List of copyright statements
  */
 interface IDebianHeader {
   format: string
@@ -28,6 +44,10 @@ interface IDebianHeader {
 /**
  * Debian Files stanza
  * @interface IFilesStanza
+ * @member files List of files (can contain wildcards)
+ * @member copyright List of copyright statements
+ * @member license Software License
+ * @member comment Additional comments
  */
 interface IFilesStanza {
   files: string[]
@@ -39,7 +59,11 @@ interface IFilesStanza {
 // Regex which matches "key: value" with multiline support
 const DEBIAN_PACKAGE_REGEX = /(?<key>[^:]+):\s*(?<value>[^\n]*(\n\s+[^\n]*)*)/g
 
-// Convert kebab-case to camelCase
+/**
+ * Converts a kebab-case string to camelCase
+ * @param str String to convert to camelCase
+ * @returns camelCase string
+ */
 const kebabToCamel = (str: string): string => {
   return str.split("-")
     .map((word, index) => index === 0 ? word.toLowerCase() : word[0].toUpperCase() + word.slice(1).toLowerCase())
@@ -118,8 +142,8 @@ const parseFileStanza = (stanza: string): IFilesStanza => {
  * Loads the Debian configuration from the provided root path
  * @param rootPath The root path of the repository
  */
-const load = (config: string): IDebianPackage|undefined => {
-  const stanzas = config.split(/\n\s*\n/);;
+const load = (config: string): IDebianPackage | undefined => {
+  const stanzas = config.split(/\n\s*\n/);
 
   if (stanzas.length === 0) {
     throw new Error("No stanzas found")
@@ -132,19 +156,36 @@ const load = (config: string): IDebianPackage|undefined => {
 }
 
 /**
- * Creates a mapping between files specified in the Debian Package and their respective SPDX headers
- * @param debianPackage 
+ * Matches the provided filename against the provided wildcard pattern
+ * @param fileName Filename to match
+ * @param pattern Wildcard pattern to match against
+ * @returns True if the filename matches the pattern, false otherwise
  */
-const licenseMap = (debianPackage: IDebianPackage): Map<string, ISPDXHeader> => {
+const wildcardMatch = (fileName: string, pattern: string): boolean => {
+  if (pattern === "*") return true;
+  const regexp = new RegExp(`^${pattern.split("*").map((s) => s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')).join(".*")}$`);
+  return regexp.test(fileName);
+}
+
+/**
+ * Creates a mapping between files specified in the Debian Package and their respective SPDX headers
+ * @param debianPackage Debian package configuration
+ * @param files List of files to map agains the Debian package configuration
+ * @returns A map of files to their respective SPDX headers
+ */
+const licenseMap = (debianPackage: IDebianPackage, files: IFile[]): Map<string, ISPDXHeader> => {
   const fileMap = new Map<string, ISPDXHeader>();
 
-  for (const files of debianPackage.files) {
-    for (const file of files.files) {
-      for (const match of glob.globSync(file)) {
-        const spdxHeader = spdx.getSPDXHeader(`${files.copyright.map(copyright => `SPDX-FileCopyrightText: ${copyright}`).join('\n')}\nSPDX-License-Identifier: ${files.license}`)
-        if (spdxHeader === undefined) continue;
+  for (const packageFiles of debianPackage.files) {
+    for (const patternFile of packageFiles.files) {
+      for (const file of files) {
+        const filePath = file.source === "original" ? file.filePath : file.licensePath;
+        if (wildcardMatch(filePath, patternFile)) {
+          const spdxHeader = spdx.getSPDXHeader(`${packageFiles.copyright.map(copyright => `SPDX-FileCopyrightText: ${copyright}`).join('\n')}\nSPDX-License-Identifier: ${packageFiles.license}`)
+          if (spdxHeader === undefined) continue;
 
-        fileMap.set(match, spdxHeader)
+          fileMap.set(filePath, spdxHeader)
+        }
       }
     }
   }

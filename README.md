@@ -8,8 +8,9 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
 This repository contains multiple solutions to ensure compliance with the REUSE specification, including:
 
-* A CLI tool to validate (local changes) for valid Copyright and License headers
-* A GitHub App built with [Probot](https://github.com/probot/probot) that Copyright and License management bot
+* A CLI tool to validate your local repository
+* A GitHub Action to validate your Pull Request/Repository contents
+* A GitHub App, built with [Probot](https://github.com/probot/probot), to manage your repository
 
 
 ## Installation instructions
@@ -23,10 +24,10 @@ npm install
 npm run build
 
 # Add execution permissions to the CLI binary
-chmod +x ./lib/entrypoints/cli.js
+chmod +x ./lib/cli/index.js
 
 # Run the CLI tool
-./lib/entrypoints/cli.js check
+./lib/cli/index.js check # OPTIONAL: provide the --all flag.
 ```
 
 ### GitHub App
