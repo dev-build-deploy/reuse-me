@@ -48,7 +48,7 @@ _You can find more details in the [dedicated documentation](./docs/cli.md)_
 
 ### GitHub Action
 
-The CLI tool can be used for local operations around your gith repository, incl:
+The CLI tool can be used for local operations around your git repository, incl:
 
 - Validation of locally modified files
 - Full validation of your repository
@@ -85,7 +85,7 @@ This will result in output similar to:
   ✅ lib/cli/index.js
   ✅ lib/probot/index.js
   ✅ src/datasources.ts
-Error: ❌ Found 2 REUSE compliance issues.
+Error: ❌ Found 1 REUSE compliance issues.
 ```
 
 In addition, annotations are added to files containing a non-compliance issue.
