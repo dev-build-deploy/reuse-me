@@ -24,7 +24,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
 <!-- REUSE-IgnoreEnd -->
 
 - Adding a `.license` file next to your (binary) files
-Using [DEP5](https://reuse.software/spec/#dep5) allows for specifying copyright and licensing in bulk
+- Using [DEP5](https://reuse.software/spec/#dep5) allows for specifying copyright and licensing in bulk
 
 _Please refer to the [Reuse specification] for more details._
 
