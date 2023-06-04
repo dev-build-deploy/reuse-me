@@ -5,7 +5,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
 */
 
 import simpleGit, { StatusResultRenamed } from "simple-git";
-import { IFile, IFileModification } from "./interfaces";
+import { ISourceFile, IFileModification } from "./interfaces";
 
 import * as fs from "fs";
 import * as github from "./github";
@@ -16,7 +16,7 @@ interface IDataSource {
    * @param context The context of the event
    * @returns The list of files that have been changed
    */
-  getChangedFiles(): Promise<IFile[]>;
+  getChangedFiles(): Promise<ISourceFile[]>;
 
   /**
    * Retrieves the contents of the provided file.
@@ -64,15 +64,15 @@ class GitSource implements IDataSource {
       ]);
       // Remove the last empty line
       return ignored.split("\n").filter(file => {
-        return (file.trim() && !fs.lstatSync(file).isDirectory())
+        return (file.trim() && fs.existsSync(file) && !fs.lstatSync(file).isDirectory())
       });
     } catch (GitError) {
       return [];
     }
   }
 
-  public async getChangedFiles(): Promise<IFile[]> {
-    const changedFiles: IFile[] = [];
+  public async getChangedFiles(): Promise<ISourceFile[]> {
+    const changedFiles: ISourceFile[] = [];
     const rootPath = await this.getRootPath()
 
     if (this.modified === false) {
@@ -85,7 +85,6 @@ class GitSource implements IDataSource {
           modification: "modified"
         });
       }
-
       return changedFiles;
     }
 
@@ -97,7 +96,7 @@ class GitSource implements IDataSource {
      * @param modification File modification type
      * @returns File dictionary
      */
-    const createFileEntry = (file: string, modification: IFileModification): IFile => {
+    const createFileEntry = (file: string, modification: IFileModification): ISourceFile => {
       return {
         source: file.endsWith(".license") ? "license" : "original",
         filePath: file.endsWith(".license") ? file.replace(".license", "") : file,
@@ -141,10 +140,10 @@ class CommitsSource implements IDataSource {
     this.commits = commits;
   }
 
-  public async getChangedFiles(): Promise<IFile[]> {
+  public async getChangedFiles(): Promise<ISourceFile[]> {
     if (!this.commits) return [];
 
-    const changedFiles: IFile[] = [];
+    const changedFiles: ISourceFile[] = [];
     for (const commit of this.commits) {
       for (const modification of ["added", "modified", "removed"]) {
         for (const file of commit[modification]) {

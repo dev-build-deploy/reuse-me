@@ -1,10 +1,19 @@
 {
-    "copyright": [
-        {
-            "contactAddress": "monkaii@hotmail.com",
-            "copyrightHolder": "Kevin de Jong",
-            "year": "2023"
-        }
-    ],
-    "licenses": ["GPL-3.0-or-later", "Fake-License"]
+  "SPDXID": "SPDXRef-1c7a9a8f2806785082affb92df606a9310c7316c",
+  "attributionTexts": [],
+  "checksums": [
+    {
+      "algorithm": "SHA1",
+      "checksumValue": "b9459a5e3cc35edd1a1900347529a7960a4ac81b"
+    }
+  ],
+  "copyrightText": "2023 Kevin de Jong <monkaii@hotmail.com>",
+  "fileContributors": [],
+  "fileName": "./license-multiple",
+  "fileTypes": [],
+  "licenseConcluded": "NOASSERTION",
+  "licenseInfoInFiles": [
+    "GPL-3.0-or-later",
+    "Fake-License"
+  ]
 }

@@ -10,6 +10,7 @@ import * as github from "@actions/github";
 import * as githubWrapper from "../github"
 import { CommitsSource, GitSource, IDataSource } from "../datasources";
 import { validate } from "../validator";
+import { SoftwareBillOfMaterials } from "../spdx";
 
 /**
  * Main entry point for the GitHub Action.
@@ -42,12 +43,15 @@ async function run(): Promise<void> {
     core.endGroup()
 
     core.startGroup("📝 Validation results")
-    const results = await validate(datasource)
+    const sbom = new SoftwareBillOfMaterials("reuseme", datasource);
+    await sbom.generate();
+    const results = validate(sbom);
+
     for (const result of results) {
-      core.info(`${result.compliant ? "✅" : "❌"} ${result.file}`)
+      core.info(`${result.compliant ? "✅" : "❌"} ${result.file.fileName}`)
       errorCount += result.errors.length;
       for (const error of result.errors) {
-        core.error(error, { title: "REUSE Compliance", file: result.file })
+        core.error(error, { title: "REUSE Compliance", file: result.file.fileName })
       }
     }
     core.endGroup()

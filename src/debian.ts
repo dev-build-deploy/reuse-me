@@ -4,7 +4,7 @@ SPDX-FileCopyrightText: 2023 Kevin de Jong <monkaii@hotmail.com>
 SPDX-License-Identifier: GPL-3.0-or-later
 */
 
-import { IFile, ISPDXHeader } from "./interfaces"
+import { ISourceFile } from "./interfaces"
 import * as spdx from "./spdx"
 
 /**
@@ -173,18 +173,18 @@ const wildcardMatch = (fileName: string, pattern: string): boolean => {
  * @param files List of files to map agains the Debian package configuration
  * @returns A map of files to their respective SPDX headers
  */
-const licenseMap = (debianPackage: IDebianPackage, files: IFile[]): Map<string, ISPDXHeader> => {
-  const fileMap = new Map<string, ISPDXHeader>();
+const licenseMap = (debianPackage: IDebianPackage, files: ISourceFile[]): Map<string, spdx.IFile> => {
+  const fileMap = new Map<string, spdx.IFile>();
 
   for (const packageFiles of debianPackage.files) {
     for (const patternFile of packageFiles.files) {
       for (const file of files) {
         const filePath = file.source === "original" ? file.filePath : file.licensePath;
         if (wildcardMatch(filePath, patternFile)) {
-          const spdxHeader = spdx.getSPDXHeader(`${packageFiles.copyright.map(copyright => `SPDX-FileCopyrightText: ${copyright}`).join('\n')}\nSPDX-License-Identifier: ${packageFiles.license}`)
-          if (spdxHeader === undefined) continue;
+          const spdxFile = spdx.parseFile(filePath, `${packageFiles.copyright.map(copyright => `SPDX-FileCopyrightText: ${copyright}`).join('\n')}\nSPDX-License-Identifier: ${packageFiles.license}`)
+          if (spdx.isReuseCompliant(spdxFile) === false) continue;
 
-          fileMap.set(filePath, spdxHeader)
+          fileMap.set(filePath, spdxFile)
         }
       }
     }

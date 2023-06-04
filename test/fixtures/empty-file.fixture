@@ -1,4 +1,17 @@
 {
-    "copyright": [],
-    "licenses": []
+  "SPDXID": "SPDXRef-4d7f393adf4431f11e08daf42f6a27a0889fd466",
+  "attributionTexts": [],
+  "checksums": [
+    {
+      "algorithm": "SHA1",
+      "checksumValue": "da39a3ee5e6b4b0d3255bfef95601890afd80709"
+    }
+  ],
+  "fileContributors": [],
+  "fileName": "./empty-file",
+  "fileTypes": [],
+  "licenseConcluded": "NOASSERTION",
+  "licenseInfoInFiles": [
+    "NOASSERTION"
+  ]
 }

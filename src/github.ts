@@ -4,8 +4,9 @@ SPDX-FileCopyrightText: 2023 Kevin de Jong <monkaii@hotmail.com>
 SPDX-License-Identifier: GPL-3.0-or-later
 */
 
-import { IFile, ISPDXHeader } from "./interfaces";
+import { ISourceFile } from "./interfaces";
 
+// REUSE-IgnoreStart
 const PULLREQUEST_TITLE = (file: string) => `Missing SPDX Header: ${file}`
 const PULLREQUEST_BODY = (file: string) => `# Context
 The file \`${file}\` does not contain a (valid) SPDX header and/or no valid \`.license\` file was found.
@@ -25,6 +26,7 @@ Please refer to the [Reuse FAQ](https://reuse.software/faq/) for more informatio
 - [SPDX License List](https://spdx.org/licenses/)
 - [SPDX Specification](https://spdx.github.io/spdx-spec/)
 `
+// REUSE-IgnoreEnd
 
 /**
  * Repository information
@@ -109,7 +111,7 @@ const getIssues = async (context: any) => {
  * @param file Specific file to check
  * @param header SPDX header of the file
  */
-const updateIssue = async (context: any, issues: any[], file: IFile, header: ISPDXHeader | undefined) => {
+const updateIssue = async (context: any, issues: any[], file: ISourceFile, header: any | undefined) => { // TODO: Header type
   // Check if an open issue does not already exist
   for (const issue of issues) {
     if (issue.title === PULLREQUEST_TITLE(file.filePath) && issue.state !== "closed") {
