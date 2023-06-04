@@ -11,6 +11,9 @@
     "github",
     "probot-app"
   ],
+  "bugs": {
+    "url": "https://github.com/dev-build-deploy/reuse-me/issues"
+  },
   "scripts": {
     "build": "run-p build:*",
     "build:cli": "ncc build -o lib/cli src/entrypoints/cli.ts",
@@ -18,6 +21,9 @@
     "build:probot": "ncc build -o lib/probot src/entrypoints/probot.ts",
     "start": "probot run ./lib/probot/index.js",
     "test": "jest"
+  },
+  "bin": {
+    "reuse-me": "./bin/reuse-me"
   },
   "dependencies": {
     "@actions/core": "^1.10.0",
