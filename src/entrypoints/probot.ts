@@ -13,7 +13,7 @@ import { SoftwareBillOfMaterials } from "../spdx";
 
 /**
  * Handles the push event, validating modified files for REUSE compliance.
- * @param context 
+ * @param context
  */
 const onPush = async (context: any) => {
   github.setRepositoryContext(context.repo.owner, context.repo.repo, context.payload.ref);
@@ -30,11 +30,11 @@ const onPush = async (context: any) => {
 
     //await github.updateIssue(context, issues, result.file, header);
   }
-}
+};
 
 /**
  * Main entry point for the bot.
  */
 export = (app: Probot) => {
-  app.on('push', onPush)
+  app.on("push", onPush);
 };

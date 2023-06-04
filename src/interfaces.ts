@@ -4,7 +4,7 @@ SPDX-FileCopyrightText: 2023 Kevin de Jong <monkaii@hotmail.com>
 SPDX-License-Identifier: GPL-3.0-or-later
 */
 
-import * as spdx from "./spdx"
+import * as spdx from "./spdx";
 
 /**
  * File modification type
@@ -18,9 +18,9 @@ export type IFileModification = "added" | "removed" | "modified";
  * @member modification The modification type
  */
 export interface ISourceFile {
-  source: "license" | "original"
-  filePath: string
-  licensePath: string
+  source: "license" | "original";
+  filePath: string;
+  licensePath: string;
   modification: IFileModification;
 }
 
@@ -32,7 +32,7 @@ export interface ISourceFile {
  * @member header Associated SPDX Header (if compliant)
  */
 export interface IValidationResult {
-  file: spdx.IFile
-  compliant: boolean
-  errors: string[]
+  file: spdx.IFile;
+  compliant: boolean;
+  errors: string[];
 }

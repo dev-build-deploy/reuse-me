@@ -18,16 +18,13 @@ describe("parseFile", () => {
    * Empty SPDX headers should be detected as invalid.
    */
   test("Empty SPDX Headers", async () => {
-    for (const invalidHeader of [
-      "empty-file",
-      "missing-header"
-    ]) {
+    for (const invalidHeader of ["empty-file", "missing-header"]) {
       const contents = fs.readFileSync(`${FIXTURES_BASE_DIR}/${invalidHeader}`, "utf8");
       const fixture = JSON.parse(fs.readFileSync(`${FIXTURES_BASE_DIR}/${invalidHeader}.fixture`, "utf8"));
       const header = spdx.parseFile(invalidHeader, contents);
 
       expect(header).toBeDefined();
-      expect(header).toStrictEqual(fixture)
+      expect(header).toStrictEqual(fixture);
     }
   });
 
@@ -41,14 +38,14 @@ describe("parseFile", () => {
       "copyright-missing-year",
       "copyright-multiple-years",
       "copyright-multiple",
-      "copyright-single"
+      "copyright-single",
     ]) {
       const contents = fs.readFileSync(`${FIXTURES_BASE_DIR}/${validHeader}`, "utf8");
       const fixture = JSON.parse(fs.readFileSync(`${FIXTURES_BASE_DIR}/${validHeader}.fixture`, "utf8"));
       const header = spdx.parseFile(validHeader, contents);
 
       expect(header).toBeDefined();
-      expect(header).toStrictEqual(fixture)
+      expect(header).toStrictEqual(fixture);
     }
   });
 
@@ -56,17 +53,13 @@ describe("parseFile", () => {
    * Validates different license combinations in the SPDX header.
    */
   test("License Headers", async () => {
-    for (const validHeader of [
-      "license-missing",
-      "license-multiple",
-      "license-single"
-    ]) {
+    for (const validHeader of ["license-missing", "license-multiple", "license-single"]) {
       const contents = fs.readFileSync(`${FIXTURES_BASE_DIR}/${validHeader}`, "utf8");
       const fixture = JSON.parse(fs.readFileSync(`${FIXTURES_BASE_DIR}/${validHeader}.fixture`, "utf8"));
       const header = spdx.parseFile(validHeader, contents);
 
       expect(header).toBeDefined();
-      expect(header).toStrictEqual(fixture)
+      expect(header).toStrictEqual(fixture);
     }
   });
 
@@ -79,8 +72,8 @@ describe("parseFile", () => {
     const header = spdx.parseFile("filetags", contents);
 
     expect(header).toBeDefined();
-    expect(header).toStrictEqual(fixture)
-  })
+    expect(header).toStrictEqual(fixture);
+  });
 
   /**
    * Validates that all data between REUSE-IgnoreStart and REUSE-IgnoreEnd is ignored.
@@ -91,6 +84,6 @@ describe("parseFile", () => {
     const header = spdx.parseFile("reuse-ignore", contents);
 
     expect(header).toBeDefined();
-    expect(header).toStrictEqual(fixture)
-  })
+    expect(header).toStrictEqual(fixture);
+  });
 });

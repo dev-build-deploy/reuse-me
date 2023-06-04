@@ -16,17 +16,13 @@ const program = new Command();
 /**
  * Main entry point for the CLI tool.
  */
-program
-  .name("reuse-me")
-  .description("Copyright and License management CLI tool")
+program.name("reuse-me").description("Copyright and License management CLI tool");
 
 program
   .command("sbom")
-  .description(
-    "Generates a Software Bill of Materials (SBOM) for the repository."
-  )
+  .description("Generates a Software Bill of Materials (SBOM) for the repository.")
   .action(async () => {
-    const sbom = new SoftwareBillOfMaterials("reuseme", new GitSource(true))
+    const sbom = new SoftwareBillOfMaterials("reuseme", new GitSource(true));
     await sbom.generate();
     console.log(JSON.stringify(sbom.toJSON(), null, 2));
   });
@@ -36,17 +32,15 @@ program
  */
 program
   .command("check")
-  .description(
-    "Checks whether the repository is compliant with the Reuse Specification."
-  )
+  .description("Checks whether the repository is compliant with the Reuse Specification.")
   .option("-a, --all", "Check all files in the repository")
-  .action(async (options) => {
-    console.log("📄 ReuseMe - REUSE compliance validation")
-    console.log("----------------------------------------")
+  .action(async options => {
+    console.log("📄 ReuseMe - REUSE compliance validation");
+    console.log("----------------------------------------");
 
-    const sbom = new SoftwareBillOfMaterials("reuseme", new GitSource(options.all))
+    const sbom = new SoftwareBillOfMaterials("reuseme", new GitSource(options.all));
     await sbom.generate();
-    const results = validate(sbom)
+    const results = validate(sbom);
 
     let errorCount = 0;
     for (const result of results) {
@@ -55,20 +49,20 @@ program
 
       errorCount += result.errors.length;
 
-      console.log(`${result.compliant ? "✅" : "❌"} ${result.file.fileName}`)
+      console.log(`${result.compliant ? "✅" : "❌"} ${result.file.fileName}`);
       for (const error of result.errors) {
-        console.log(`   ${error}`)
+        console.log(`   ${error}`);
       }
     }
 
     if (!options.all || errorCount > 0) {
-      console.log("----------------------------------------")
+      console.log("----------------------------------------");
     }
 
     if (errorCount === 0) {
-      console.log(`✅ Found no REUSE compliance issues.`)
+      console.log(`✅ Found no REUSE compliance issues.`);
     } else {
-      program.error(`❌ Found ${errorCount} REUSE compliance issues.`)
+      program.error(`❌ Found ${errorCount} REUSE compliance issues.`);
     }
   });
 

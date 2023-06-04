@@ -43,10 +43,12 @@ class GitSource implements IDataSource {
    */
   private async getRootPath(): Promise<string> {
     if (this.__ROOT_PATH === undefined) {
-      this.__ROOT_PATH = await simpleGit().revparse({ '--show-toplevel': null })
+      this.__ROOT_PATH = await simpleGit().revparse({
+        "--show-toplevel": null,
+      });
     }
 
-    return this.__ROOT_PATH
+    return this.__ROOT_PATH;
   }
 
   /**
@@ -56,15 +58,10 @@ class GitSource implements IDataSource {
    */
   private async listFiles(rootPath: string): Promise<string[]> {
     try {
-      const ignored = await simpleGit().raw([
-        "ls-files",
-        "--exclude-standard",
-        "--full-name",
-        rootPath,
-      ]);
+      const ignored = await simpleGit().raw(["ls-files", "--exclude-standard", "--full-name", rootPath]);
       // Remove the last empty line
       return ignored.split("\n").filter(file => {
-        return (file.trim() && fs.existsSync(file) && !fs.lstatSync(file).isDirectory())
+        return file.trim() && fs.existsSync(file) && !fs.lstatSync(file).isDirectory();
       });
     } catch (GitError) {
       return [];
@@ -73,7 +70,7 @@ class GitSource implements IDataSource {
 
   public async getChangedFiles(): Promise<ISourceFile[]> {
     const changedFiles: ISourceFile[] = [];
-    const rootPath = await this.getRootPath()
+    const rootPath = await this.getRootPath();
 
     if (this.modified === false) {
       const files = await this.listFiles(rootPath);
@@ -82,13 +79,13 @@ class GitSource implements IDataSource {
           source: file.endsWith(".license") ? "license" : "original",
           filePath: file.endsWith(".license") ? file.replace(".license", "") : file,
           licensePath: file.endsWith(".license") ? file : `${file}.license`,
-          modification: "modified"
+          modification: "modified",
         });
       }
       return changedFiles;
     }
 
-    const status = await simpleGit(rootPath).status()
+    const status = await simpleGit(rootPath).status();
 
     /**
      * Creates a single file entry
@@ -101,20 +98,28 @@ class GitSource implements IDataSource {
         source: file.endsWith(".license") ? "license" : "original",
         filePath: file.endsWith(".license") ? file.replace(".license", "") : file,
         licensePath: file.endsWith(".license") ? file : `${file}.license`,
-        modification: modification
-      }
-    }
+        modification: modification,
+      };
+    };
 
-    status.created.forEach((file: string) => { changedFiles.push(createFileEntry(file, "added")) })
-    status.not_added.forEach((file: string) => { changedFiles.push(createFileEntry(file, "added")) })
+    status.created.forEach((file: string) => {
+      changedFiles.push(createFileEntry(file, "added"));
+    });
+    status.not_added.forEach((file: string) => {
+      changedFiles.push(createFileEntry(file, "added"));
+    });
 
-    status.modified.forEach((file: string) => { changedFiles.push(createFileEntry(file, "modified")) })
+    status.modified.forEach((file: string) => {
+      changedFiles.push(createFileEntry(file, "modified"));
+    });
 
-    status.deleted.forEach((file: string) => { changedFiles.push(createFileEntry(file, "removed")) })
+    status.deleted.forEach((file: string) => {
+      changedFiles.push(createFileEntry(file, "removed"));
+    });
     status.renamed.forEach((rename: StatusResultRenamed) => {
-      changedFiles.push(createFileEntry(rename.from, "removed"))
-      changedFiles.push(createFileEntry(rename.to, "added"))
-    })
+      changedFiles.push(createFileEntry(rename.from, "removed"));
+      changedFiles.push(createFileEntry(rename.to, "added"));
+    });
 
     return changedFiles;
   }
@@ -151,7 +156,7 @@ class CommitsSource implements IDataSource {
             source: file.endsWith(".license") ? "license" : "original",
             filePath: file.endsWith(".license") ? file.replace(".license", "") : file,
             licensePath: file.endsWith(".license") ? file : `${file}.license`,
-            modification: (modification as IFileModification)
+            modification: modification as IFileModification,
           });
         }
       }
@@ -165,4 +170,4 @@ class CommitsSource implements IDataSource {
   }
 }
 
-export { IDataSource, GitSource, CommitsSource }
+export { IDataSource, GitSource, CommitsSource };

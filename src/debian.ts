@@ -4,8 +4,8 @@ SPDX-FileCopyrightText: 2023 Kevin de Jong <monkaii@hotmail.com>
 SPDX-License-Identifier: GPL-3.0-or-later
 */
 
-import { ISourceFile } from "./interfaces"
-import * as spdx from "./spdx"
+import { ISourceFile } from "./interfaces";
+import * as spdx from "./spdx";
 
 /**
  * Debian Package
@@ -14,8 +14,8 @@ import * as spdx from "./spdx"
  * @member files List of file-stanzas
  */
 interface IDebianPackage {
-  header: IDebianHeader,
-  files: IFilesStanza[]
+  header: IDebianHeader;
+  files: IFilesStanza[];
 }
 
 /**
@@ -31,14 +31,14 @@ interface IDebianPackage {
  * @member copyright List of copyright statements
  */
 interface IDebianHeader {
-  format: string
-  upstreamName?: string
-  upstreamContact?: string
-  source?: string
-  disclaimer?: string
-  comment?: string
-  license?: string
-  copyright?: string[]
+  format: string;
+  upstreamName?: string;
+  upstreamContact?: string;
+  source?: string;
+  disclaimer?: string;
+  comment?: string;
+  license?: string;
+  copyright?: string[];
 }
 
 /**
@@ -50,14 +50,14 @@ interface IDebianHeader {
  * @member comment Additional comments
  */
 interface IFilesStanza {
-  files: string[]
-  copyright: string[]
-  license: string
-  comment?: string
+  files: string[];
+  copyright: string[];
+  license: string;
+  comment?: string;
 }
 
 // Regex which matches "key: value" with multiline support
-const DEBIAN_PACKAGE_REGEX = /(?<key>[^:]+):\s*(?<value>[^\n]*(\n\s+[^\n]*)*)/g
+const DEBIAN_PACKAGE_REGEX = /(?<key>[^:]+):\s*(?<value>[^\n]*(\n\s+[^\n]*)*)/g;
 
 /**
  * Converts a kebab-case string to camelCase
@@ -65,10 +65,11 @@ const DEBIAN_PACKAGE_REGEX = /(?<key>[^:]+):\s*(?<value>[^\n]*(\n\s+[^\n]*)*)/g
  * @returns camelCase string
  */
 const kebabToCamel = (str: string): string => {
-  return str.split("-")
-    .map((word, index) => index === 0 ? word.toLowerCase() : word[0].toUpperCase() + word.slice(1).toLowerCase())
-    .join("")
-}
+  return str
+    .split("-")
+    .map((word, index) => (index === 0 ? word.toLowerCase() : word[0].toUpperCase() + word.slice(1).toLowerCase()))
+    .join("");
+};
 
 /**
  * Parses the provided header string into a DebianHeader object
@@ -77,8 +78,8 @@ const kebabToCamel = (str: string): string => {
  */
 const parseHeader = (header: string): IDebianHeader => {
   const headerData: IDebianHeader = {
-    format: "1.0"
-  }
+    format: "1.0",
+  };
 
   const matches = header.matchAll(DEBIAN_PACKAGE_REGEX);
   for (const match of matches) {
@@ -91,19 +92,35 @@ const parseHeader = (header: string): IDebianHeader => {
 
     // TODO: Remove the need for this switch statement
     switch (key) {
-      case "format": headerData.format = value; break;
-      case "upstreamName": headerData.upstreamName = value; break;
-      case "upstreamContact": headerData.upstreamContact = value; break;
-      case "source": headerData.source = value; break;
-      case "disclaimer": headerData.disclaimer = value; break;
-      case "comment": headerData.comment = value; break;
-      case "license": headerData.license = value; break;
-      case "copyright": headerData.copyright = value.split("\n").map(line => line.trim()); break;
+      case "format":
+        headerData.format = value;
+        break;
+      case "upstreamName":
+        headerData.upstreamName = value;
+        break;
+      case "upstreamContact":
+        headerData.upstreamContact = value;
+        break;
+      case "source":
+        headerData.source = value;
+        break;
+      case "disclaimer":
+        headerData.disclaimer = value;
+        break;
+      case "comment":
+        headerData.comment = value;
+        break;
+      case "license":
+        headerData.license = value;
+        break;
+      case "copyright":
+        headerData.copyright = value.split("\n").map(line => line.trim());
+        break;
     }
   }
 
   return headerData;
-}
+};
 
 /**
  * Parses the provided stanza string into a DebianPackage object
@@ -114,8 +131,8 @@ const parseFileStanza = (stanza: string): IFilesStanza => {
   const filesStanza: IFilesStanza = {
     files: [],
     license: "",
-    copyright: []
-  }
+    copyright: [],
+  };
 
   const matches = stanza.matchAll(DEBIAN_PACKAGE_REGEX);
   for (const match of matches) {
@@ -128,15 +145,23 @@ const parseFileStanza = (stanza: string): IFilesStanza => {
 
     // TODO: Remove the need for this switch statement
     switch (key) {
-      case "files": filesStanza.files = value.split(" "); break;
-      case "license": filesStanza.license = value.split("\n")[0]; break;
-      case "copyright": filesStanza.copyright = value.split("\n").map(line => line.trim()); break;
-      case "comment": filesStanza.comment = value; break;
+      case "files":
+        filesStanza.files = value.split(" ");
+        break;
+      case "license":
+        filesStanza.license = value.split("\n")[0];
+        break;
+      case "copyright":
+        filesStanza.copyright = value.split("\n").map(line => line.trim());
+        break;
+      case "comment":
+        filesStanza.comment = value;
+        break;
     }
   }
 
   return filesStanza;
-}
+};
 
 /**
  * Loads the Debian configuration from the provided root path
@@ -146,14 +171,14 @@ const load = (config: string): IDebianPackage | undefined => {
   const stanzas = config.split(/\n\s*\n/);
 
   if (stanzas.length === 0) {
-    throw new Error("No stanzas found")
+    throw new Error("No stanzas found");
   }
 
   return {
     header: parseHeader(stanzas[0]),
-    files: stanzas.slice(1).map((stanza) => parseFileStanza(stanza))
-  }
-}
+    files: stanzas.slice(1).map(stanza => parseFileStanza(stanza)),
+  };
+};
 
 /**
  * Matches the provided filename against the provided wildcard pattern
@@ -163,9 +188,14 @@ const load = (config: string): IDebianPackage | undefined => {
  */
 const wildcardMatch = (fileName: string, pattern: string): boolean => {
   if (pattern === "*") return true;
-  const regexp = new RegExp(`^${pattern.split("*").map((s) => s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')).join(".*")}$`);
+  const regexp = new RegExp(
+    `^${pattern
+      .split("*")
+      .map(s => s.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"))
+      .join(".*")}$`
+  );
   return regexp.test(fileName);
-}
+};
 
 /**
  * Creates a mapping between files specified in the Debian Package and their respective SPDX headers
@@ -181,16 +211,21 @@ const licenseMap = (debianPackage: IDebianPackage, files: ISourceFile[]): Map<st
       for (const file of files) {
         const filePath = file.source === "original" ? file.filePath : file.licensePath;
         if (wildcardMatch(filePath, patternFile)) {
-          const spdxFile = spdx.parseFile(filePath, `${packageFiles.copyright.map(copyright => `SPDX-FileCopyrightText: ${copyright}`).join('\n')}\nSPDX-License-Identifier: ${packageFiles.license}`)
+          const spdxFile = spdx.parseFile(
+            filePath,
+            `${packageFiles.copyright
+              .map(copyright => `SPDX-FileCopyrightText: ${copyright}`)
+              .join("\n")}\nSPDX-License-Identifier: ${packageFiles.license}`
+          );
           if (spdx.isReuseCompliant(spdxFile) === false) continue;
 
-          fileMap.set(filePath, spdxFile)
+          fileMap.set(filePath, spdxFile);
         }
       }
     }
   }
 
   return fileMap;
-}
+};
 
-export { load, licenseMap, IDebianPackage }
+export { load, licenseMap, IDebianPackage };
