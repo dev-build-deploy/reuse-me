@@ -1,9 +1,18 @@
 {
-    "copyright": [
-        {
-            "copyrightHolder": "Kevin de Jong",
-            "year": "2023"
-        }
-    ],
-    "licenses": ["GPL-3.0-or-later"]
+  "SPDXID": "SPDXRef-6bed8464d7b0660db77b03dd26d3ccdc2bfd4efe",
+  "attributionTexts": [],
+  "checksums": [
+    {
+      "algorithm": "SHA1",
+      "checksumValue": "a7fb6e2e4872255788731d660a79055cb743f3f7"
+    }
+  ],
+  "copyrightText": "2023 Kevin de Jong",
+  "fileContributors": [],
+  "fileName": "./copyright-missing-contact-address",
+  "fileTypes": [],
+  "licenseConcluded": "NOASSERTION",
+  "licenseInfoInFiles": [
+    "GPL-3.0-or-later"
+  ]
 }

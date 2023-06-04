@@ -1,0 +1,7 @@
+# REUSE-IgnoreStart
+SPDX-FileCopyrightText: 1990 Kevin de Jong <monkaii@hotmail.com>
+SPDX-License-Identifier: FakeLicense
+# REUSE-IgnoreEnd
+
+SPDX-FileCopyrightText: 2023 Kevin de Jong <monkaii@hotmail.com>
+SPDX-License-Identifier: GPL-3.0-or-later

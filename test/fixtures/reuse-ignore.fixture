@@ -1,14 +1,15 @@
 {
-  "SPDXID": "SPDXRef-31a65fa6c6ccee3684d648afe0fea8fd6f6d2e7a",
+  "SPDXID": "SPDXRef-a725bc6611eb8a6c14db1c8b35fa276f0cba31c4",
   "attributionTexts": [],
   "checksums": [
     {
       "algorithm": "SHA1",
-      "checksumValue": "b29af16f474a0182457c01116f80ca9388743d59"
+      "checksumValue": "994187a803cb5aafa61c08cb63e3d98e0bbd1e2d"
     }
   ],
+  "copyrightText": "2023 Kevin de Jong <monkaii@hotmail.com>",
   "fileContributors": [],
-  "fileName": "./copyright-missing",
+  "fileName": "./reuse-ignore",
   "fileTypes": [],
   "licenseConcluded": "NOASSERTION",
   "licenseInfoInFiles": [

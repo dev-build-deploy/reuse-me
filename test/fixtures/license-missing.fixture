@@ -1,10 +1,18 @@
 {
-    "copyright": [
-        {
-            "contactAddress": "monkaii@hotmail.com",
-            "copyrightHolder": "Kevin de Jong",
-            "year": "2023"
-        }
-    ],
-    "licenses": []
+  "SPDXID": "SPDXRef-5f35799993acc93d615be019eaa2a682833bb851",
+  "attributionTexts": [],
+  "checksums": [
+    {
+      "algorithm": "SHA1",
+      "checksumValue": "b23a8ecb6cff39d8045f962971ee15301e4d6898"
+    }
+  ],
+  "copyrightText": "2023 Kevin de Jong <monkaii@hotmail.com>",
+  "fileContributors": [],
+  "fileName": "./license-missing",
+  "fileTypes": [],
+  "licenseConcluded": "NOASSERTION",
+  "licenseInfoInFiles": [
+    "NOASSERTION"
+  ]
 }

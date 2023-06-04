@@ -46,7 +46,6 @@ Commands:
 
 ### Validate your repository
 
-
 Running the `check` command will perform local validation of your repository.
 
 ```sh
@@ -77,3 +76,25 @@ $ ./lib/cli/index.js check
 ```
 
 Additionally, you can use the `--all` flag to validate _all_ files in your repository.
+
+### Generate Software Bill of Materials
+
+You can generate a SPDX 2.3 compliant Software Bill of Materials (SBOM) using the `sbom` command.
+
+```sh
+Usage: reuse-me sbom [options]
+
+Generates a Software Bill of Materials (SBOM) for the repository.
+
+Options:
+  -h, --help  display help for command
+```
+
+The result is redirected to your stdout.
+
+> **NOTE**:\
+This command will generate a SBOM based on the provided information - this also means that it will included files not correctly attributed according to the [Reuse specification].\
+\
+Please refer to [the validation instructions](#validate-your-repository) for more details.
+
+[Reuse specification]: https://reuse.software/spec/

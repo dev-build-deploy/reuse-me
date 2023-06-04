@@ -4,30 +4,59 @@ SPDX-FileCopyrightText: 2023 Kevin de Jong <monkaii@hotmail.com>
 SPDX-License-Identifier: GPL-3.0-or-later
 -->
 
-# reuse-me
+# ReuseMe
 
-This repository contains multiple solutions to ensure compliance with the REUSE specification, including:
+ReuseMe provides [multiple tools](#tooling) for managing software licensing and copyright attributions, including support for:
 
-* A [CLI tool](#command-line-interface) to validate your local repository
-* A [GitHub Action](#github-action) to validate your Pull Request/Repository contents
+* Validation of your files against the [Reuse specification]
+* Generation of an SPDX 2.3 compatible Software Bill of Materials (SBOM)
 
-## Configuration
+## Basic guidelines
+### Adding licensing and copyright information to your file
 Per the [Reuse specification], you can cover your files with the following approaches:
 
-- Adding a [comment header](#https://reuse.software/spec/#comment-headers) in your files
+- Adding a [comment header](#https://reuse.software/spec/#comment-headers) in your files;
+<!-- REUSE-IgnoreStart -->
+```yaml
+SPDX-FileCopyrightText: 2023 Kevin de Jong <monkaii@hotmail.com>
+SPDX-License-Identifier: GPL-3.0-or-later
+```
+<!-- REUSE-IgnoreEnd -->
+
 - Adding a `.license` file next to your (binary) files
 Using [DEP5](https://reuse.software/spec/#dep5) allows for specifying copyright and licensing in bulk
 
 _Please refer to the [Reuse specification] for more details._
 
-## Command Line Interface
+### Use SPDX File Tags to enrich your Software Bill of Materials
+To enrichen your SPDX 2.3 SBOM, additional [File Tags](https://spdx.github.io/spdx-spec/v2.3/file-tags/) can be used to add additional information to each file. For example:
+
+<!-- REUSE-IgnoreStart -->
+```yaml
+SPDX-FileCopyrightText: 2023 Kevin de Jong <monkaii@hotmail.com>
+SPDX-FileType: DOCUMENTATION
+SPDX-License-Identifier: GPL-3.0-or-later
+SPDX-FileLicenseConcluded: GPL-3.0-or-later
+SPDX-FileLicenseComments: This file is original work of the copyright holder, and therefor the license specified in the file is correct.
+SPDX-FileComment: This file is part of the public documentation.
+SPDX-FileContributor: Kevin de Jong
+```
+<!-- REUSE-IgnoreEnd -->
+
+## Tooling
+
+There are two main options available:
+* A [CLI tool](#command-line-interface) for managing your local (git) repository
+* A [GitHub Action](#github-action) to validate your Pull Request/Repository contents
+
+### Command Line Interface
 
 The CLI tool can be used for local operations around your git repository, incl:
 
 - Validation of locally modified files
 - Full validation of your repository
 
-## Example usage
+#### Example usage
 
 ```sh
 $ ./lib/cli/index.js check
@@ -53,7 +82,7 @@ The CLI tool can be used for local operations around your git repository, incl:
 - Validation of locally modified files
 - Full validation of your repository
 
-## Example usage:
+#### Example usage:
 
 ```yaml
 name: Copyright & Licenses
