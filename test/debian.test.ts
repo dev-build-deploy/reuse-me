@@ -17,15 +17,13 @@ describe("getDebianConfig", () => {
    * Example Debian Config
    */
   test("Full Debian Config", async () => {
-    for (const validConfig of [
-      "deb5-complete"
-    ]) {
+    for (const validConfig of ["deb5-complete"]) {
       const config = fs.readFileSync(`${FIXTURES_BASE_DIR}/${validConfig}`, "utf8");
       const fixture = JSON.parse(fs.readFileSync(`${FIXTURES_BASE_DIR}/${validConfig}.fixture`, "utf8"));
-      const pkg = debian.load(config)
+      const pkg = debian.load(config);
 
       expect(pkg).toBeDefined();
-      expect(pkg).toStrictEqual(fixture)
+      expect(pkg).toStrictEqual(fixture);
     }
   });
 });

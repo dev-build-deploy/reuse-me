@@ -15,16 +15,18 @@ const validate = (sbom: spdx.SoftwareBillOfMaterials): IValidationResult[] => {
     const result: IValidationResult = {
       file: file,
       compliant: spdx.isReuseCompliant(file),
-      errors: []
-    }
+      errors: [],
+    };
 
     if (result.compliant === false) {
       if (spdx.hasValidLicense(file) === false && spdx.hasValidCopyrightText(file) === false) {
-        result.errors.push(`Missing (or invalid) Copyright (SPDX-FileCopyrightText) and License (SPDX-License-Identifier) statements.`)
+        result.errors.push(
+          `Missing (or invalid) Copyright (SPDX-FileCopyrightText) and License (SPDX-License-Identifier) statements.`
+        );
       } else if (spdx.hasValidCopyrightText(file) === false) {
-        result.errors.push(`Missing (or invalid) Copyright (SPDX-FileCopyrightText) statement.`)
+        result.errors.push(`Missing (or invalid) Copyright (SPDX-FileCopyrightText) statement.`);
       } else if (spdx.hasValidLicense(file) === false) {
-        result.errors.push(`Missing (or invalid) License (SPDX-License-Identifier) statement.`)
+        result.errors.push(`Missing (or invalid) License (SPDX-License-Identifier) statement.`);
       }
     }
 
@@ -32,6 +34,6 @@ const validate = (sbom: spdx.SoftwareBillOfMaterials): IValidationResult[] => {
   }
 
   return results;
-}
+};
 
-export { validate }
+export { validate };

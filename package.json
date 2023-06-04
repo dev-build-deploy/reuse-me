@@ -20,7 +20,8 @@
     "build:action": "ncc build -o lib/action src/entrypoints/action.ts",
     "build:probot": "ncc build -o lib/probot src/entrypoints/probot.ts",
     "start": "probot run ./lib/probot/index.js",
-    "test": "jest"
+    "test": "jest",
+    "format": "prettier --write **/*.ts && prettier --write **/**/*.ts"
   },
   "bin": {
     "reuse-me": "./bin/reuse-me"
@@ -39,6 +40,7 @@
     "@vercel/ncc": "^0.36.1",
     "jest": "^29.0.0",
     "npm-run-all": "^4.1.5",
+    "prettier": "^2.8.8",
     "smee-client": "^1.2.2",
     "ts-jest": "^29.0.0",
     "typescript": "^4.1.3"
