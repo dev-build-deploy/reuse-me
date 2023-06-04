@@ -11,14 +11,11 @@ SPDX-License-Identifier: GPL-3.0-or-later
 A pre-compiled version of the CLI is already provided as part of this repository. One can therefore:
 
 ```sh
-# Clone the repository
-$ git clone https://github.com/dev-build-deploy/reuse-me.git
-
-# Go the local copy of the repository
-$ cd reuse-me
+# Install the CLI tool
+$ npm install -g https://github.com/dev-build-deploy/reuse-me
 
 # Run the CLI tool
-$ ./lib/cli/index.js
+$ reuse-me
 ```
 
 > **NOTE**: Creation of an installable package is part of the roadmap!
@@ -30,7 +27,7 @@ $ ./lib/cli/index.js
 You can find more information about the possible commands with the `--help` flag, i.e.:
 
 ```sh
-$ ./lib/cli/index.js --help
+$ reuse-me --help
 
 Usage: reuse-me [options] [command]
 
@@ -49,6 +46,8 @@ Commands:
 Running the `check` command will perform local validation of your repository.
 
 ```sh
+$ reuse-me check --help
+
 Usage: reuse-me check [options]
 
 Checks whether the repository is compliant with the Reuse Specification.
@@ -61,7 +60,7 @@ Options:
  By default, it will use your `git` status to determine which files to validate, i.e.:
 
 ```sh
-$ ./lib/cli/index.js check
+$ reuse-me check
 
 📄 ReuseMe - REUSE compliance validation
 ----------------------------------------
@@ -82,6 +81,8 @@ Additionally, you can use the `--all` flag to validate _all_ files in your repos
 You can generate a SPDX 2.3 compliant Software Bill of Materials (SBOM) using the `sbom` command.
 
 ```sh
+$ reuse-me sbom --help
+
 Usage: reuse-me sbom [options]
 
 Generates a Software Bill of Materials (SBOM) for the repository.

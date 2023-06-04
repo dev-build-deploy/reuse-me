@@ -59,7 +59,7 @@ The CLI tool can be used for local operations around your git repository, incl:
 #### Example usage
 
 ```sh
-$ ./lib/cli/index.js check
+$ reuse-me check
 
 📄 ReuseMe - REUSE compliance validation
 ----------------------------------------
