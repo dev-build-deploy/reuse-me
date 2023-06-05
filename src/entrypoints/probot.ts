@@ -20,7 +20,7 @@ const onPush = async (context: any) => {
   // const issues = await github.getIssues(context);
 
   const datasource = new CommitsSource(context.octokit, context.payload.commits);
-  const sbom = new SoftwareBillOfMaterials("reuseme", datasource);
+  const sbom = new SoftwareBillOfMaterials(context.repo.repo, datasource);
   await sbom.generate();
 
   const results = validate(sbom);

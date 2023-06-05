@@ -22,7 +22,8 @@ program
   .command("sbom")
   .description("Generates a Software Bill of Materials (SBOM) for the repository.")
   .action(async () => {
-    const sbom = new SoftwareBillOfMaterials("reuseme", new GitSource(true));
+    const datasource = new GitSource(true)
+    const sbom = new SoftwareBillOfMaterials(await datasource.getRepositoryName(), datasource);
     await sbom.generate();
     console.log(JSON.stringify(sbom.toJSON(), null, 2));
   });
@@ -38,7 +39,8 @@ program
     console.log("📄 ReuseMe - REUSE compliance validation");
     console.log("----------------------------------------");
 
-    const sbom = new SoftwareBillOfMaterials("reuseme", new GitSource(options.all));
+    const datasource = new GitSource(options.all);
+    const sbom = new SoftwareBillOfMaterials(await datasource.getRepositoryName(), datasource);
     await sbom.generate();
     const results = validate(sbom);
 

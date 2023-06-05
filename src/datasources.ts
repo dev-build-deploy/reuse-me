@@ -7,6 +7,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
 import simpleGit, { StatusResultRenamed } from "simple-git";
 import { ISourceFile, IFileModification } from "./interfaces";
 
+import * as path from "path";
 import * as fs from "fs";
 import * as github from "./github";
 
@@ -24,6 +25,11 @@ interface IDataSource {
    * @returns The contents of the file
    */
   getFileContents(file: string): Promise<string>;
+
+  /**
+   * Retrieves the name of the repository.
+   */
+  getRepositoryName(): Promise<string>;
 }
 
 /**
@@ -35,6 +41,10 @@ class GitSource implements IDataSource {
 
   constructor(all: boolean = false) {
     this.modified = !all;
+  }
+
+  public async getRepositoryName(): Promise<string> {
+    return path.basename(await this.getRootPath());
   }
 
   /**
@@ -143,6 +153,10 @@ class CommitsSource implements IDataSource {
   constructor(octokit: any, commits: any) {
     this.octokit = octokit;
     this.commits = commits;
+  }
+
+  public async getRepositoryName(): Promise<string> {
+    return github.getRepositoryContext().repo;
   }
 
   public async getChangedFiles(): Promise<ISourceFile[]> {
