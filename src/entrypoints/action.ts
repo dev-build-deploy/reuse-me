@@ -43,7 +43,7 @@ async function run(): Promise<void> {
     core.endGroup();
 
     core.startGroup("📝 Validation results");
-    const sbom = new SoftwareBillOfMaterials("reuseme", datasource);
+    const sbom = new SoftwareBillOfMaterials(github.context.repo.repo, datasource);
     await sbom.generate();
     const results = validate(sbom);
 
