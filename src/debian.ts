@@ -57,7 +57,7 @@ interface IFilesStanza {
 }
 
 // Regex which matches "key: value" with multiline support
-const DEBIAN_PACKAGE_REGEX = /(?<key>[^:]+):\s*(?<value>[^\n]*(\n\s+[^\n]*)*)/g;
+const DEBIAN_PACKAGE_REGEX = /(?<key>[^:]+):\s*(?<value>[^[\r\n]+]*([\r\n]+\s+[^[\r\n]+]*)*)/g;
 
 /**
  * Converts a kebab-case string to camelCase
@@ -114,7 +114,7 @@ const parseHeader = (header: string): IDebianHeader => {
         headerData.license = value;
         break;
       case "copyright":
-        headerData.copyright = value.split("\n").map(line => line.trim());
+        headerData.copyright = value.split(/[\r\n]+/).map(line => line.trim());
         break;
     }
   }
@@ -146,13 +146,16 @@ const parseFileStanza = (stanza: string): IFilesStanza => {
     // TODO: Remove the need for this switch statement
     switch (key) {
       case "files":
-        filesStanza.files = value.split(" ");
+        filesStanza.files = value
+          .split(/[\r\n]+/)
+          .map(file => file.trim())
+          .filter(file => file.trim().length > 0);
         break;
       case "license":
-        filesStanza.license = value.split("\n")[0];
+        filesStanza.license = value.split(/[\r\n]+/)[0];
         break;
       case "copyright":
-        filesStanza.copyright = value.split("\n").map(line => line.trim());
+        filesStanza.copyright = value.split(/[\r\n]+/).map(line => line.trim());
         break;
       case "comment":
         filesStanza.comment = value;
@@ -168,7 +171,7 @@ const parseFileStanza = (stanza: string): IFilesStanza => {
  * @param rootPath The root path of the repository
  */
 const load = (config: string): IDebianPackage | undefined => {
-  const stanzas = config.split(/\n\s*\n/);
+  const stanzas = config.split(/[\r\n]+\s*[\r\n]+/);
 
   if (stanzas.length === 0) {
     throw new Error("No stanzas found");
@@ -181,7 +184,16 @@ const load = (config: string): IDebianPackage | undefined => {
 };
 
 /**
- * Matches the provided filename against the provided wildcard pattern
+ * Matches the provided filename against the provided wildcard pattern in accordance
+ * to the DEB5 specification:
+ *
+ *   Only the wildcards * and ? apply; the former matches any number of characters (including none),
+ *   the latter a single character. Both match slashes (/) and leading dots, unlike shell globs. The
+ *   pattern *.in therefore matches any file whose name ends in .in anywhere in the source tree, not
+ *   just at the top level.
+ *
+ * TODO: Implement support for the ? wildcard
+ *
  * @param fileName Filename to match
  * @param pattern Wildcard pattern to match against
  * @returns True if the filename matches the pattern, false otherwise
@@ -194,6 +206,7 @@ const wildcardMatch = (fileName: string, pattern: string): boolean => {
       .map(s => s.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"))
       .join(".*")}$`
   );
+
   return regexp.test(fileName);
 };
 
@@ -217,7 +230,6 @@ const licenseMap = (debianPackage: IDebianPackage, files: ISourceFile[]): Map<st
               .map(copyright => `SPDX-FileCopyrightText: ${copyright}`)
               .join("\n")}\nSPDX-License-Identifier: ${packageFiles.license}`
           );
-          if (spdx.isReuseCompliant(spdxFile) === false) continue;
 
           fileMap.set(filePath, spdxFile);
         }

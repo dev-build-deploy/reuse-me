@@ -22,7 +22,7 @@ program
   .command("sbom")
   .description("Generates a Software Bill of Materials (SBOM) for the repository.")
   .action(async () => {
-    const datasource = new GitSource(true)
+    const datasource = new GitSource(true);
     const sbom = new SoftwareBillOfMaterials(await datasource.getRepositoryName(), datasource);
     await sbom.generate();
     console.log(JSON.stringify(sbom.toJSON(), null, 2));
