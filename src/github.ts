@@ -48,7 +48,7 @@ const setRepositoryContext = (owner: string, repo: string, ref: string) => {
 
 const getRepositoryContext = () => {
   return REPOSITORY;
-}
+};
 
 /**
  * Retrieves all affected files of the pull request.
@@ -177,4 +177,12 @@ const getFileContents = async (octokit: any, filePath: string): Promise<string> 
   }
 };
 
-export { getRepositoryContext, getPullRequestCommits, getFileContents, getIssues, setRepositoryContext, updateIssue, IRepository };
+export {
+  getRepositoryContext,
+  getPullRequestCommits,
+  getFileContents,
+  getIssues,
+  setRepositoryContext,
+  updateIssue,
+  IRepository,
+};

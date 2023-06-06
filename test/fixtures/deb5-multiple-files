@@ -1,0 +1,8 @@
+Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: Example
+Upstream-Contact: Kevin de Jong <monkaii@hotmail.com>
+
+Files: test/*.ts
+       test/fixtures/*.fixture
+Copyright: 2023, Kevin de Jong <monkaii@hotmail.com>
+License: GPL-3.0-or-later
