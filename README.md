@@ -77,7 +77,7 @@ _You can find more details in the [dedicated documentation](./docs/cli.md)_
 
 ### GitHub Action
 
-The CLI tool can be used for local operations around your git repository, incl:
+You can use direct integration with GitHub Actions, and confirm compliance with the [REUSE specification] in two ways;
 
 - Validation of locally modified files
 - Full validation of your repository
