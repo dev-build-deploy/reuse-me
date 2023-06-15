@@ -54,31 +54,26 @@ describe("getDebianConfig", () => {
         source: "original",
         filePath: "test/fixtures/something.fixture",
         licensePath: "LICENSE",
-        modification: "modified",
       },
       {
         source: "original",
         filePath: "test/fixtures/another.fixture",
         licensePath: "LICENSE",
-        modification: "modified",
       },
       {
         source: "original",
         filePath: "test/fixtures/should-not-match",
         licensePath: "LICENSE",
-        modification: "modified",
       },
       {
         source: "original",
         filePath: "test/debian.ts",
         licensePath: "LICENSE",
-        modification: "modified",
       },
       {
         source: "original",
         filePath: "fake/doesntexist.ts",
         licensePath: "fake/doesntexist.ts",
-        modification: "modified",
       },
     ]);
 

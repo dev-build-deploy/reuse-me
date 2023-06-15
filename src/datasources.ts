@@ -4,12 +4,11 @@ SPDX-FileCopyrightText: 2023 Kevin de Jong <monkaii@hotmail.com>
 SPDX-License-Identifier: GPL-3.0-or-later
 */
 
-import simpleGit, { StatusResultRenamed } from "simple-git";
-import { ISourceFile, IFileModification } from "./interfaces";
+import simpleGit from "simple-git";
+import { ISourceFile } from "./interfaces";
 
 import * as path from "path";
 import * as fs from "fs";
-import * as github from "./github";
 
 interface IDataSource {
   /**
@@ -17,19 +16,24 @@ interface IDataSource {
    * @param context The context of the event
    * @returns The list of files that have been changed
    */
-  getChangedFiles(): Promise<ISourceFile[]>;
+  getFiles(): Promise<ISourceFile[]>;
 
   /**
    * Retrieves the contents of the provided file.
    * @param file The file to retrieve the contents of
    * @returns The contents of the file
    */
-  getFileContents(file: string): Promise<string>;
+  getFileContents(file: string, buffer?: boolean): Promise<string>;
 
   /**
    * Retrieves the name of the repository.
    */
   getRepositoryName(): Promise<string>;
+
+  /**
+   * Retrieves the list of license files stored in LICENSES/.
+   */
+  getLicenseFiles(): Promise<string[]>;
 }
 
 /**
@@ -37,11 +41,6 @@ interface IDataSource {
  */
 class GitSource implements IDataSource {
   __ROOT_PATH: string | undefined = undefined;
-  modified: boolean;
-
-  constructor(all = false) {
-    this.modified = !all;
-  }
 
   public async getRepositoryName(): Promise<string> {
     return path.basename(await this.getRootPath());
@@ -61,16 +60,24 @@ class GitSource implements IDataSource {
     return this.__ROOT_PATH;
   }
 
+  async getLicenseFiles(): Promise<string[]> {
+    const rootPath = await this.getRootPath();
+    const files = await this.listFiles(rootPath);
+    return files.filter(file => file.startsWith("LICENSES/"));
+  }
+
   /**
-   * Retrieve the files ignored based on `.gitignore`
+   * Retrieve the tracked and untracked files from git
    * @param rootPath The root path of the repository
-   * @returns The list of ignored files
+   * @returns The list of (un)tracked files
    */
   private async listFiles(rootPath: string): Promise<string[]> {
     try {
-      const ignored = await simpleGit().raw(["ls-files", "--exclude-standard", "--full-name", rootPath]);
+      const tracked = await simpleGit().raw(["ls-files", "--exclude-standard", "--full-name", rootPath]);
+      const untracked = await simpleGit().raw(["ls-files", "--others", "--exclude-standard", "--full-name", rootPath]);
+      const files = tracked + "\n" + untracked;
       // Remove the last empty line
-      return ignored.split("\n").filter(file => {
+      return files.split("\n").filter(file => {
         return file.trim() && fs.existsSync(file) && !fs.lstatSync(file).isDirectory();
       });
     } catch (GitError) {
@@ -78,110 +85,55 @@ class GitSource implements IDataSource {
     }
   }
 
-  public async getChangedFiles(): Promise<ISourceFile[]> {
+  public async getFiles(): Promise<ISourceFile[]> {
     const changedFiles: ISourceFile[] = [];
     const rootPath = await this.getRootPath();
 
-    if (this.modified === false) {
-      const files = await this.listFiles(rootPath);
-      for (const file of files) {
-        changedFiles.push({
-          source: file.endsWith(".license") ? "license" : "original",
-          filePath: file.endsWith(".license") ? file.replace(".license", "") : file,
-          licensePath: file.endsWith(".license") ? file : `${file}.license`,
-          modification: "modified",
-        });
-      }
-      return changedFiles;
-    }
-
-    const status = await simpleGit(rootPath).status();
-
-    /**
-     * Creates a single file entry
-     * @param file File path
-     * @param modification File modification type
-     * @returns File dictionary
-     */
-    const createFileEntry = (file: string, modification: IFileModification): ISourceFile => {
-      return {
+    const files = await this.listFiles(rootPath);
+    for (const file of files) {
+      changedFiles.push({
         source: file.endsWith(".license") ? "license" : "original",
         filePath: file.endsWith(".license") ? file.replace(".license", "") : file,
         licensePath: file.endsWith(".license") ? file : `${file}.license`,
-        modification: modification,
-      };
-    };
-
-    status.created.forEach((file: string) => {
-      changedFiles.push(createFileEntry(file, "added"));
-    });
-    status.not_added.forEach((file: string) => {
-      changedFiles.push(createFileEntry(file, "added"));
-    });
-
-    status.modified.forEach((file: string) => {
-      changedFiles.push(createFileEntry(file, "modified"));
-    });
-
-    status.deleted.forEach((file: string) => {
-      changedFiles.push(createFileEntry(file, "removed"));
-    });
-    status.renamed.forEach((rename: StatusResultRenamed) => {
-      changedFiles.push(createFileEntry(rename.from, "removed"));
-      changedFiles.push(createFileEntry(rename.to, "added"));
-    });
-
+      });
+    }
     return changedFiles;
   }
 
-  public async getFileContents(file: string): Promise<string> {
-    if (fs.existsSync(file) === false) {
-      // TOO: Determine whether we need to handle this use case.
-      return "";
-    }
-    return fs.readFileSync(file, "utf8");
+  /**
+   * Read the first 1024 bytes of a file
+   * @param file The file to read
+   * @returns The first 1024 bytes of the file
+   * @throws Error if the file cannot be read
+   */
+  private readBuffer(file: string): string {
+    const stream = fs.createReadStream(file, {
+      flags: "r",
+      encoding: "utf-8",
+      fd: undefined,
+      mode: 666,
+      end: 1024,
+    });
+
+    let fileData = "";
+    stream.on("data", function (data) {
+      fileData += data;
+    });
+    stream.on("error", function () {
+      throw new Error(`Problem while reading file '${file}'}`);
+    });
+    stream.on("end", function () {
+      return fileData;
+    });
+
+    return fileData;
+  }
+
+  public async getFileContents(file: string, buffer?: boolean): Promise<string> {
+    if (fs.existsSync(file) === false) return "";
+    if (buffer) return this.readBuffer(file);
+    else return fs.readFileSync(file, "utf8");
   }
 }
 
-/**
- * GitHub data source for determining which files need to be validated.
- */
-class CommitsSource implements IDataSource {
-  octokit: any;
-  commits: any;
-
-  constructor(octokit: any, commits: any) {
-    this.octokit = octokit;
-    this.commits = commits;
-  }
-
-  public async getRepositoryName(): Promise<string> {
-    return github.getRepositoryContext().repo;
-  }
-
-  public async getChangedFiles(): Promise<ISourceFile[]> {
-    if (!this.commits) return [];
-
-    const changedFiles: ISourceFile[] = [];
-    for (const commit of this.commits) {
-      for (const modification of ["added", "modified", "removed"]) {
-        for (const file of commit[modification]) {
-          changedFiles.push({
-            source: file.endsWith(".license") ? "license" : "original",
-            filePath: file.endsWith(".license") ? file.replace(".license", "") : file,
-            licensePath: file.endsWith(".license") ? file : `${file}.license`,
-            modification: modification as IFileModification,
-          });
-        }
-      }
-    }
-
-    return changedFiles;
-  }
-
-  public async getFileContents(file: string): Promise<string> {
-    return await github.getFileContents(this.octokit, file);
-  }
-}
-
-export { IDataSource, GitSource, CommitsSource };
+export { IDataSource, GitSource };

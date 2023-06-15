@@ -7,11 +7,6 @@ SPDX-License-Identifier: GPL-3.0-or-later
 import * as spdx from "./spdx";
 
 /**
- * File modification type
- */
-export type IFileModification = "added" | "removed" | "modified";
-
-/**
  * File information
  * @interface IFile
  * @member path The path to the file
@@ -21,7 +16,6 @@ export interface ISourceFile {
   source: "license" | "original";
   filePath: string;
   licensePath: string;
-  modification: IFileModification;
 }
 
 /**

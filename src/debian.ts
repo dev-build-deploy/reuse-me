@@ -13,7 +13,7 @@ import * as spdx from "./spdx";
  * @member header Debian Header
  * @member files List of file-stanzas
  */
-interface IDebianPackage {
+export interface IDebianPackage {
   header: IDebianHeader;
   files: IFilesStanza[];
 }
@@ -64,19 +64,19 @@ const DEBIAN_PACKAGE_REGEX = /(?<key>[^:]+):\s*(?<value>[^[\r\n]+]*([\r\n]+\s+[^
  * @param str String to convert to camelCase
  * @returns camelCase string
  */
-const kebabToCamel = (str: string): string => {
+function kebabToCamel(str: string): string {
   return str
     .split("-")
     .map((word, index) => (index === 0 ? word.toLowerCase() : word[0].toUpperCase() + word.slice(1).toLowerCase()))
     .join("");
-};
+}
 
 /**
  * Parses the provided header string into a DebianHeader object
  * @param header The header string to parse
  * @returns The DebianHeader object
  */
-const parseHeader = (header: string): IDebianHeader => {
+function parseHeader(header: string): IDebianHeader {
   const headerData: IDebianHeader = {
     format: "1.0",
   };
@@ -120,14 +120,14 @@ const parseHeader = (header: string): IDebianHeader => {
   }
 
   return headerData;
-};
+}
 
 /**
  * Parses the provided stanza string into a DebianPackage object
  * @param stanza The stanza string to parse
  * @returns The DebianPackage object
  */
-const parseFileStanza = (stanza: string): IFilesStanza => {
+function parseFileStanza(stanza: string): IFilesStanza {
   const filesStanza: IFilesStanza = {
     files: [],
     license: "",
@@ -164,13 +164,13 @@ const parseFileStanza = (stanza: string): IFilesStanza => {
   }
 
   return filesStanza;
-};
+}
 
 /**
  * Loads the Debian configuration from the provided root path
  * @param rootPath The root path of the repository
  */
-const load = (config: string): IDebianPackage | undefined => {
+export function load(config: string): IDebianPackage | undefined {
   const stanzas = config.split(/[\r\n]+\s*[\r\n]+/);
 
   if (stanzas.length === 0) {
@@ -181,7 +181,7 @@ const load = (config: string): IDebianPackage | undefined => {
     header: parseHeader(stanzas[0]),
     files: stanzas.slice(1).map(stanza => parseFileStanza(stanza)),
   };
-};
+}
 
 /**
  * Matches the provided filename against the provided wildcard pattern in accordance
@@ -198,7 +198,7 @@ const load = (config: string): IDebianPackage | undefined => {
  * @param pattern Wildcard pattern to match against
  * @returns True if the filename matches the pattern, false otherwise
  */
-const wildcardMatch = (fileName: string, pattern: string): boolean => {
+function wildcardMatch(fileName: string, pattern: string): boolean {
   if (pattern === "*") return true;
   const regexp = new RegExp(
     `^${pattern
@@ -208,7 +208,7 @@ const wildcardMatch = (fileName: string, pattern: string): boolean => {
   );
 
   return regexp.test(fileName);
-};
+}
 
 /**
  * Creates a mapping between files specified in the Debian Package and their respective SPDX headers
@@ -216,7 +216,7 @@ const wildcardMatch = (fileName: string, pattern: string): boolean => {
  * @param files List of files to map agains the Debian package configuration
  * @returns A map of files to their respective SPDX headers
  */
-const licenseMap = (debianPackage: IDebianPackage, files: ISourceFile[]): Map<string, spdx.IFile> => {
+export function licenseMap(debianPackage: IDebianPackage, files: ISourceFile[]): Map<string, spdx.IFile> {
   const fileMap = new Map<string, spdx.IFile>();
 
   for (const packageFiles of debianPackage.files) {
@@ -224,12 +224,14 @@ const licenseMap = (debianPackage: IDebianPackage, files: ISourceFile[]): Map<st
       for (const file of files) {
         const filePath = file.source === "original" ? file.filePath : file.licensePath;
         if (wildcardMatch(filePath, patternFile)) {
+          // REUSE-IgnoreStart
           const spdxFile = spdx.parseFile(
             filePath,
             `${packageFiles.copyright
               .map(copyright => `SPDX-FileCopyrightText: ${copyright}`)
               .join("\n")}\nSPDX-License-Identifier: ${packageFiles.license}`
           );
+          // REUSE-IgnoreEnd
 
           fileMap.set(filePath, spdxFile);
         }
@@ -238,6 +240,4 @@ const licenseMap = (debianPackage: IDebianPackage, files: ISourceFile[]): Map<st
   }
 
   return fileMap;
-};
-
-export { load, licenseMap, IDebianPackage };
+}

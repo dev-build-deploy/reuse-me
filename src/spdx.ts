@@ -94,7 +94,7 @@ interface IRelationship {
  * @see https://spdx.github.io/spdx-spec/3-relationships-between-SPDX-elements/
  * @see https://spdx.github.io/spdx-spec/4-file-information/
  */
-interface ISoftwareBillOfMaterials {
+export interface ISoftwareBillOfMaterials {
   SPDXID: string;
   spdxVersion: string;
   name: string;
@@ -148,7 +148,7 @@ class SoftwareBillOfMaterials implements ISoftwareBillOfMaterials {
   private async createFile(file: ISourceFile, debianLicenseMap: Map<string, IFile>) {
     const fileName = file.source === "original" ? file.filePath : file.licensePath;
     // Determine the SPDX header of the file
-    let spdxFile = parseFile(fileName, await this.datasource.getFileContents(file.filePath));
+    let spdxFile;
 
     // First we check whether the file is matched in the Debian package configuration
     const debianFileLicense = debianLicenseMap.get(file.filePath);
@@ -158,7 +158,7 @@ class SoftwareBillOfMaterials implements ISoftwareBillOfMaterials {
 
     // Next we check for an available .license file, as part of optimization for large
     // binary files.
-    if (isReuseCompliant(spdxFile) === false) {
+    if (spdxFile === undefined || isReuseCompliant(spdxFile) === false) {
       spdxFile = parseFile(fileName, await this.datasource.getFileContents(file.licensePath));
     }
 
@@ -175,8 +175,8 @@ class SoftwareBillOfMaterials implements ISoftwareBillOfMaterials {
    * @returns The list of files
    */
   private async gatherFiles(): Promise<IFile[]> {
-    const changedFiles = await this.datasource.getChangedFiles();
-    const debianConfig = debian.load(await this.datasource.getFileContents(".reuse/dep5"));
+    const changedFiles = await this.datasource.getFiles();
+    const debianConfig = debian.load(await this.datasource.getFileContents(".reuse/dep5", false));
     const debianLicenseMap = debianConfig ? debian.licenseMap(debianConfig, changedFiles) : new Map<string, IFile>();
 
     // Validate each file asynchronously
@@ -184,16 +184,6 @@ class SoftwareBillOfMaterials implements ISoftwareBillOfMaterials {
     for (const file of changedFiles) {
       // Skip files in the LICENSES/ directory
       if (file.filePath.startsWith("LICENSES/") || file.filePath === ".reuse/dep5" || file.filePath === "LICENSE.txt")
-        continue;
-      // Skip original source files which have been removed
-      if (file.source === "original" && file.modification === "removed") continue;
-      if (
-        file.source === "license" &&
-        file.modification === "removed" &&
-        changedFiles.filter(
-          f => f.filePath === file.filePath && f.source === "original" && f.modification === "removed"
-        ).length === 1
-      )
         continue;
 
       promises.push(this.createFile(file, debianLicenseMap));
@@ -255,10 +245,12 @@ const parseFile = (fileName: string, contents: string): IFile => {
   };
 
   // REUSE-IgnoreStart
-  const SPDXLicenseHeaderRegex = /SPDX-License-Identifier:\s*(?<identifier>[A-Za-z0-9-.]+)/g;
+  const SPDXLicenseHeaderRegex = /SPDX-License-Identifier:\s*(?<identifier>(.*)+)/g;
+  const SPDXCopyrightRegex = /^[\W]*(©|[Cc]opyright|\([Cc]\)|SPDX-FileCopyrightText:)\s+(?<identifier>(.*)+)/gm;
+  const SPDXCopyrightIdentifierRegex = /(?<year>[\d,-\s]*)\s*(?<copyrightHolder>[^<\n\r]*)\s(<(?<contactAddress>.*)>)?/;
 
-  const SPDXCopyrightRegex =
-    /(©|[Cc]opyright|\([Cc]\))*\s*(?<year>[\d,-\s]*)\s*(?<copyrightHolder>[^<\n\r]*)\s(<(?<contactAddress>.*)>)?/;
+  // const SPDXCopyrightRegex =
+  //  /(©|[Cc]opyright|\([Cc]\))*\s*(?<year>[\d,-\s]*)\s*(?<copyrightHolder>[^<\n\r]*)\s(<(?<contactAddress>.*)>)?/;
   const SPDXFileTagRegex = /SPDX-File(?<key>[A-Za-z]*):\s*(?<value>.*)/g;
 
   const ReuseIgnoreRegex = /REUSE-IgnoreStart[\s\S]*REUSE-IgnoreEnd/g;
@@ -271,8 +263,20 @@ const parseFile = (fileName: string, contents: string): IFile => {
   const licenseMatches = strippedContents.matchAll(SPDXLicenseHeaderRegex);
   for (const match of licenseMatches) {
     if (match?.groups === undefined) continue;
-    const license = match.groups?.identifier.trim();
-    if (file.licenseInfoInFiles.includes(license) === false) file.licenseInfoInFiles.push(license);
+    const licenses = match.groups?.identifier
+      .split(/( AND | OR )/)
+      .filter(license => license !== " AND " && license !== " OR ");
+    licenses.forEach(license => {
+      if (file.licenseInfoInFiles.includes(license.trim()) === false) file.licenseInfoInFiles.push(license.trim());
+    });
+  }
+
+  const copyrightMatches = strippedContents.matchAll(SPDXCopyrightRegex);
+  for (const match of copyrightMatches) {
+    if (match?.groups === undefined) continue;
+    if (file.copyrightText !== undefined) continue;
+    if (SPDXCopyrightIdentifierRegex.test(match.groups.identifier) === false) continue;
+    file.copyrightText = match.groups.identifier.trim();
   }
 
   const fileTagMatches = strippedContents.matchAll(SPDXFileTagRegex);
@@ -292,9 +296,6 @@ const parseFile = (fileName: string, contents: string): IFile => {
       case "Contributor":
         file.fileContributors.push(value);
         break;
-      case "CopyrightText":
-        if (file.copyrightText === undefined && SPDXCopyrightRegex.test(value)) file.copyrightText = value;
-        break; // TODO: Multiline support
       case "LicenseComments":
         file.licenseComments = value;
         break; // TODO: Multiline support

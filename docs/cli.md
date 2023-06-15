@@ -53,20 +53,16 @@ Usage: reuse-me check [options]
 Checks whether the repository is compliant with the Reuse Specification.
 
 Options:
-  -a, --all   Check all files in the repository
   -h, --help  display help for command
 ```
 
- By default, it will use your `git` status to determine which files to validate, i.e.:
+By default, ReuseMe will use information from `git` to exclude ignored files.
 
 ```sh
 $ reuse-me check
 ```
 
 <img src="./images/cli_example.svg">
-
-
-Additionally, you can use the `--all` flag to validate _all_ files in your repository.
 
 ### Generate Software Bill of Materials
 
