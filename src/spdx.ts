@@ -187,6 +187,14 @@ class SoftwareBillOfMaterials implements ISoftwareBillOfMaterials {
         continue;
       // Skip original source files which have been removed
       if (file.source === "original" && file.modification === "removed") continue;
+      if (
+        file.source === "license" &&
+        file.modification === "removed" &&
+        changedFiles.filter(
+          f => f.filePath === file.filePath && f.source === "original" && f.modification === "removed"
+        ).length === 1
+      )
+        continue;
 
       promises.push(this.createFile(file, debianLicenseMap));
     }
