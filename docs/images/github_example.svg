@@ -1,4 +1,4 @@
-<svg fill="none" viewBox="0 0 900 300" width="900" height="300" xmlns="http://www.w3.org/2000/svg">
+<svg fill="none" viewBox="0 0 900 250" width="900" height="250" xmlns="http://www.w3.org/2000/svg">
     <foreignObject width="100%" height="100%">
       <style type="text/css">
       .ansi2html-content { display: inline; white-space: pre-wrap; word-wrap: break-word; }
@@ -12,15 +12,12 @@
       <div xmlns="http://www.w3.org/1999/xhtml" style="color: #ffffff; background-color: #171B21; padding: 1px">
         <pre class="ansi2html-content">
   📄 ReuseMe - REUSE compliance validation
-  🔎 Scanning Pull Request
-  📝 Validation results
-    ❌ docs/cli.md
-       Error: <span class="ansi1">./src/validator.ts:0:0: </span><span class="ansi1 ansi31">error:</span><span class="ansi1"> Each Covered File MUST have Licensing Information associated with it.</span>
-       Error: <span class="ansi1">./src/validator.ts:0:0: </span><span class="ansi1 ansi31">error:</span><span class="ansi1"> Each Covered File MUST have Copyright Information associated with it.</span>
-    ✅ lib/action/index.js
-    ✅ lib/cli/index.js
-    ✅ lib/probot/index.js
-    ✅ src/datasources.ts
+    ❌ The Project 'reuse-me'
+       Error: <span class="ansi1">reuse-me:0:0: </span><span class="ansi1 ansi31">error:</span><span class="ansi1"> The </span><span class="ansi36">Project MUST include a License File for</span> <span class="ansi1">every license, but is missing</span> <span class="ansi36">FAKE-LICENSE</span>
+
+    ❌ ./action.yml
+       Error: <span class="ansi1">./action.yml:0:0: </span><span class="ansi1 ansi31">error:</span><span class="ansi36"> Each Covered File MUST have Copyright</span><span class="ansi1"> and Licensing </span><span class="ansi36">Information</span><span class="ansi1"> associated with it.</span>
+
   Error: ❌ Found 2 REUSE compliance issues.
         </pre>
       </div>

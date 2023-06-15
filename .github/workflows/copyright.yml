@@ -17,6 +17,5 @@ jobs:
     name: REUSE compliance
     runs-on: ubuntu-latest
     steps:
-      - uses: dev-build-deploy/reuse-me@v0
-        with:
-          token: ${{ github.token }}
+      - uses: actions/checkout@v3
+      - uses: ./
