@@ -203,7 +203,7 @@ const wildcardMatch = (fileName: string, pattern: string): boolean => {
   const regexp = new RegExp(
     `^${pattern
       .split("*")
-      .map(s => s.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"))
+      .map(s => s.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&"))
       .join(".*")}$`
   );
 

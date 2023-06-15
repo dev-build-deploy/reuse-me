@@ -181,7 +181,7 @@ class SoftwareBillOfMaterials implements ISoftwareBillOfMaterials {
 
     // Validate each file asynchronously
     const promises = [];
-    for (let file of changedFiles) {
+    for (const file of changedFiles) {
       // Skip files in the LICENSES/ directory
       if (file.filePath.startsWith("LICENSES/") || file.filePath === ".reuse/dep5" || file.filePath === "LICENSE.txt")
         continue;
@@ -230,7 +230,7 @@ class SoftwareBillOfMaterials implements ISoftwareBillOfMaterials {
  * @returns SPDX File entry
  */
 const parseFile = (fileName: string, contents: string): IFile => {
-  let file: IFile = {
+  const file: IFile = {
     SPDXID: `SPDXRef-${crypto.createHash("SHA1").update(fileName).digest("hex")}`,
     checksums: [
       {
@@ -250,7 +250,7 @@ const parseFile = (fileName: string, contents: string): IFile => {
   const SPDXLicenseHeaderRegex = /SPDX-License-Identifier:\s*(?<identifier>[A-Za-z0-9-.]+)/g;
 
   const SPDXCopyrightRegex =
-    /(©|[Cc]opyright|\([Cc]\))*\s*(?<year>[\d,-\s]*)\s*(?<copyrightHolder>[^\<\n\r]*)\s(<(?<contactAddress>.*)>)?/;
+    /(©|[Cc]opyright|\([Cc]\))*\s*(?<year>[\d,-\s]*)\s*(?<copyrightHolder>[^<\n\r]*)\s(<(?<contactAddress>.*)>)?/;
   const SPDXFileTagRegex = /SPDX-File(?<key>[A-Za-z]*):\s*(?<value>.*)/g;
 
   const ReuseIgnoreRegex = /REUSE-IgnoreStart[\s\S]*REUSE-IgnoreEnd/g;

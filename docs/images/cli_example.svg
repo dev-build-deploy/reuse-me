@@ -1,0 +1,30 @@
+<svg fill="none" viewBox="0 0 900 300" width="900" height="300" xmlns="http://www.w3.org/2000/svg">
+    <foreignObject width="100%" height="100%">
+      <style type="text/css">
+      .ansi2html-content { display: inline; white-space: pre-wrap; word-wrap: break-word; }
+      .body_foreground { color: #AAAAAA; }
+      .body_background { background-color: #000000; }
+      .inv_foreground { color: #000000; }
+      .inv_background { background-color: #AAAAAA; }
+      .ansi1 { font-weight: bold; }
+      .ansi31 { color: #aa0000; }
+      </style>
+      <div xmlns="http://www.w3.org/1999/xhtml" style="color: #ffffff; background-color: #171B21; padding: 1px">
+        <pre class="ansi2html-content">
+  📄 ReuseMe - REUSE compliance validation
+  ----------------------------------------
+  ✅ ./lib/action/index.js
+  ✅ ./lib/cli/index.js
+  ✅ ./lib/probot/index.js
+  ✅ ./package-lock.json
+  ✅ ./package.json
+  ❌ ./src/validator.ts
+     <span class="ansi1">./src/validator.ts:0:0: </span><span class="ansi1 ansi31">error:</span><span class="ansi1"> Each Covered File MUST have Licensing Information associated with it.</span>
+     <span class="ansi1">./src/validator.ts:0:0: </span><span class="ansi1 ansi31">error:</span><span class="ansi1"> Each Covered File MUST have Copyright Information associated with it.</span>
+  ✅ ./tsconfig.json
+  ----------------------------------------
+  ❌ Found 2 REUSE compliance issues.
+        </pre>
+      </div>
+    </foreignObject>
+</svg>

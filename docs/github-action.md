@@ -8,18 +8,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
 You can scan your [full repository](#repository-scanning) and [pull requests](#pull-request-scanning) for determining compliance with the [Reuse specification]. Running this GitHub Action will result in output similar to:
 
-```sh
-📄 ReuseMe - REUSE compliance validation
-🔎 Scanning Pull Request
-📝 Validation results
-  ❌ docs/cli.md
-    Error: Missing (or invalid) SPDX Copyright (SPDX-FileCopyrightText) and License (SPDX-License-Identifier) statements.
-  ✅ lib/action/index.js
-  ✅ lib/cli/index.js
-  ✅ lib/probot/index.js
-  ✅ src/datasources.ts
-Error: ❌ Found 2 REUSE compliance issues.
-```
+<img src="./images/cli_example.svg">
 
 ## Workflows
 
