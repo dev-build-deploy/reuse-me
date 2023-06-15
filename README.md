@@ -58,20 +58,16 @@ The CLI tool can be used for local operations around your git repository, incl:
 
 #### Example usage
 
+Running the `check` command...
+
 ```sh
 $ reuse-me check
-
-📄 ReuseMe - REUSE compliance validation
-----------------------------------------
-❌ docs/cli.md
-   Missing (or invalid) SPDX Copyright (SPDX-FileCopyrightText) and License (SPDX-License-Identifier) statements.
-✅ lib/action/index.js
-✅ lib/cli/index.js
-✅ lib/probot/index.js
-✅ src/datasources.ts
-----------------------------------------
-❌ Found 1 REUSE compliance issues.
 ```
+
+...will result in output similar to:
+
+<img src="./docs/images/cli_example.svg">
+
 
 _You can find more details in the [dedicated documentation](./docs/cli.md)_
 
@@ -104,18 +100,8 @@ jobs:
 ```
 
 This will result in output similar to:
-```sh
-📄 ReuseMe - REUSE compliance validation
-🔎 Scanning Pull Request
-📝 Validation results
-  ❌ docs/cli.md
-    Error: Missing (or invalid) SPDX Copyright (SPDX-FileCopyrightText) and License (SPDX-License-Identifier) statements.
-  ✅ lib/action/index.js
-  ✅ lib/cli/index.js
-  ✅ lib/probot/index.js
-  ✅ src/datasources.ts
-Error: ❌ Found 1 REUSE compliance issues.
-```
+
+<img src="./docs/images/github_example.svg">
 
 In addition, annotations are added to files containing a non-compliance issue.
 

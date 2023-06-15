@@ -61,18 +61,10 @@ Options:
 
 ```sh
 $ reuse-me check
-
-📄 ReuseMe - REUSE compliance validation
-----------------------------------------
-❌ docs/cli.md
-   Missing (or invalid) SPDX Copyright (SPDX-FileCopyrightText) and License (SPDX-License-Identifier) statements.
-✅ lib/action/index.js
-✅ lib/cli/index.js
-✅ lib/probot/index.js
-✅ src/datasources.ts
-----------------------------------------
-✅ Found no REUSE compliance issues.
 ```
+
+<img src="./images/cli_example.svg">
+
 
 Additionally, you can use the `--all` flag to validate _all_ files in your repository.
 

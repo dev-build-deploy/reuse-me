@@ -5,6 +5,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
 */
 
 import { IValidationResult } from "./interfaces";
+import { ExpressiveMessage } from "@dev-build-deploy/diagnose-it";
 
 import * as spdx from "./spdx";
 
@@ -19,15 +20,20 @@ const validate = (sbom: spdx.SoftwareBillOfMaterials): IValidationResult[] => {
     };
 
     if (result.compliant === false) {
-      if (spdx.hasValidLicense(file) === false && spdx.hasValidCopyrightText(file) === false) {
+      if (spdx.hasValidLicense(file) === false)
         result.errors.push(
-          `Missing (or invalid) Copyright (SPDX-FileCopyrightText) and License (SPDX-License-Identifier) statements.`
+          new ExpressiveMessage()
+            .id(file.fileName)
+            .error("Each Covered File MUST have Licensing Information associated with it.")
+            .toString()
         );
-      } else if (spdx.hasValidCopyrightText(file) === false) {
-        result.errors.push(`Missing (or invalid) Copyright (SPDX-FileCopyrightText) statement.`);
-      } else if (spdx.hasValidLicense(file) === false) {
-        result.errors.push(`Missing (or invalid) License (SPDX-License-Identifier) statement.`);
-      }
+      if (spdx.hasValidCopyrightText(file) === false)
+        result.errors.push(
+          new ExpressiveMessage()
+            .id(file.fileName)
+            .error("Each Covered File MUST have Copyright Information associated with it.")
+            .toString()
+        );
     }
 
     results.push(result);

@@ -39,7 +39,7 @@ class GitSource implements IDataSource {
   __ROOT_PATH: string | undefined = undefined;
   modified: boolean;
 
-  constructor(all: boolean = false) {
+  constructor(all = false) {
     this.modified = !all;
   }
 
