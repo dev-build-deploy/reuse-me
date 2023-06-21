@@ -8,6 +8,7 @@ import { IDataSource } from "./datasources";
 import * as debian from "./debian";
 import { ISourceFile } from "./interfaces";
 import * as crypto from "crypto";
+import { getSourceFile } from "./utils";
 
 type IFileType =
   | "SOURCE"
@@ -39,7 +40,7 @@ type IFileType =
  * @member attributionText Attribution text
  * @see https://spdx.github.io/spdx-spec/4-file-information/
  */
-interface IFile {
+export interface IFile {
   SPDXID: string;
   annotations?: {
     annotationDate: string;
@@ -110,7 +111,13 @@ export interface ISoftwareBillOfMaterials {
   files: IFile[];
 }
 
-class SoftwareBillOfMaterials implements ISoftwareBillOfMaterials {
+/**
+ * SPDX Document
+ * @class SoftwareBillOfMaterials
+ * @implements ISoftwareBillOfMaterials
+ * @see https://spdx.github.io/spdx-spec/2-document-creation-information/
+ */
+export class SoftwareBillOfMaterials implements ISoftwareBillOfMaterials {
   SPDXID = "SPDXRef-DOCUMENT";
   spdxVersion = "SPDX-2.3";
   dataLicense = "CC0-1.0";
@@ -146,28 +153,19 @@ class SoftwareBillOfMaterials implements ISoftwareBillOfMaterials {
    * @returns The SPDX File entry
    */
   private async createFile(file: ISourceFile, debianLicenseMap: Map<string, IFile>) {
-    const fileName = file.source === "original" ? file.filePath : file.licensePath;
-    // Determine the SPDX header of the file
-    let spdxFile;
+    const fileName = getSourceFile(file);
 
     // First we check whether the file is matched in the Debian package configuration
     const debianFileLicense = debianLicenseMap.get(file.filePath);
-    if (debianFileLicense !== undefined) {
-      spdxFile = debianFileLicense;
-    }
+    if (debianFileLicense !== undefined && isReuseCompliant(debianFileLicense)) return debianFileLicense;
 
     // Next we check for an available .license file, as part of optimization for large
     // binary files.
-    if (spdxFile === undefined || isReuseCompliant(spdxFile) === false) {
-      spdxFile = parseFile(fileName, await this.datasource.getFileContents(file.licensePath));
-    }
+    const licenseFileLicense = parseFile(fileName, await this.datasource.getFileContents(file.licensePath));
+    if (isReuseCompliant(licenseFileLicense)) return licenseFileLicense;
 
     // Otherwise, we check the original file.
-    if (isReuseCompliant(spdxFile) === false) {
-      spdxFile = parseFile(fileName, await this.datasource.getFileContents(file.filePath));
-    }
-
-    return spdxFile;
+    return parseFile(fileName, await this.datasource.getFileContents(file.filePath));
   }
 
   /**
@@ -180,26 +178,28 @@ class SoftwareBillOfMaterials implements ISoftwareBillOfMaterials {
     const debianLicenseMap = debianConfig ? debian.licenseMap(debianConfig, changedFiles) : new Map<string, IFile>();
 
     // Validate each file asynchronously
-    const promises = [];
-    for (const file of changedFiles) {
-      // Skip files in the LICENSES/ directory
-      if (file.filePath.startsWith("LICENSES/") || file.filePath === ".reuse/dep5" || file.filePath === "LICENSE.txt")
-        continue;
-
-      promises.push(this.createFile(file, debianLicenseMap));
-    }
-
-    return await Promise.all(promises);
+    return await Promise.all(
+      changedFiles
+        .filter(
+          file =>
+            !(
+              file.filePath.startsWith("LICENSES/") ||
+              file.filePath === ".reuse/dep5" ||
+              file.filePath === "LICENSE.txt"
+            )
+        )
+        .map(file => this.createFile(file, debianLicenseMap))
+    );
   }
 
   async generate() {
     this.files = await this.gatherFiles();
-    this.files.forEach(file => {
-      this.relationships.push({
+    this.relationships = this.files.map(file => {
+      return {
         spdxElementId: "SPDXRef-DOCUMENT",
         relationshipType: "DESCRIBES",
         relatedSpdxElement: file.SPDXID,
-      });
+      };
     });
   }
 
@@ -227,15 +227,10 @@ class SoftwareBillOfMaterials implements ISoftwareBillOfMaterials {
  * @param contents Contents of the file
  * @returns SPDX File entry
  */
-const parseFile = (fileName: string, contents: string): IFile => {
+export function parseFile(fileName: string, contents: string): IFile {
   const file: IFile = {
     SPDXID: `SPDXRef-${crypto.createHash("SHA1").update(fileName).digest("hex")}`,
-    checksums: [
-      {
-        algorithm: "SHA1",
-        checksumValue: crypto.createHash("SHA1").update(contents).digest("hex"),
-      },
-    ],
+    checksums: [{ algorithm: "SHA1", checksumValue: crypto.createHash("SHA1").update(contents).digest("hex") }],
     fileContributors: [],
     fileName: fileName.startsWith("./") ? fileName : `./${fileName}`,
     fileTypes: [],
@@ -248,11 +243,7 @@ const parseFile = (fileName: string, contents: string): IFile => {
   const SPDXLicenseHeaderRegex = /SPDX-License-Identifier:\s*(?<identifier>(.*)+)/g;
   const SPDXCopyrightRegex = /^[\W]*(©|[Cc]opyright|\([Cc]\)|SPDX-FileCopyrightText:)\s+(?<identifier>(.*)+)/gm;
   const SPDXCopyrightIdentifierRegex = /(?<year>[\d,-\s]*)\s*(?<copyrightHolder>[^<\n\r]*)\s(<(?<contactAddress>.*)>)?/;
-
-  // const SPDXCopyrightRegex =
-  //  /(©|[Cc]opyright|\([Cc]\))*\s*(?<year>[\d,-\s]*)\s*(?<copyrightHolder>[^<\n\r]*)\s(<(?<contactAddress>.*)>)?/;
   const SPDXFileTagRegex = /SPDX-File(?<key>[A-Za-z]*):\s*(?<value>.*)/g;
-
   const ReuseIgnoreRegex = /REUSE-IgnoreStart[\s\S]*REUSE-IgnoreEnd/g;
   // REUSE-IgnoreEnd
 
@@ -263,12 +254,8 @@ const parseFile = (fileName: string, contents: string): IFile => {
   const licenseMatches = strippedContents.matchAll(SPDXLicenseHeaderRegex);
   for (const match of licenseMatches) {
     if (match?.groups === undefined) continue;
-    const licenses = match.groups?.identifier
-      .split(/( AND | OR )/)
-      .filter(license => license !== " AND " && license !== " OR ");
-    licenses.forEach(license => {
-      if (file.licenseInfoInFiles.includes(license.trim()) === false) file.licenseInfoInFiles.push(license.trim());
-    });
+    const license = match.groups?.identifier.trim();
+    if (!file.licenseInfoInFiles.includes(license)) file.licenseInfoInFiles.push(license);
   }
 
   const copyrightMatches = strippedContents.matchAll(SPDXCopyrightRegex);
@@ -320,26 +307,37 @@ const parseFile = (fileName: string, contents: string): IFile => {
   }
 
   return file;
-};
+}
 
-const hasValidLicense = (file: IFile): boolean => {
+export function hasValidLicense(file: IFile): boolean {
   return (
     file.licenseInfoInFiles.length > 0 &&
     !(file.licenseInfoInFiles.length === 1 && file.licenseInfoInFiles[0] === "NOASSERTION")
   );
-};
+}
 
-const hasValidCopyrightText = (file: IFile): boolean => {
+export function hasValidCopyrightText(file: IFile): boolean {
   return file.copyrightText !== undefined && file.copyrightText !== "";
-};
+}
 
 /**
  * Validates whether the provided header is a valid SPDX header.
  * @param header SPDX header to validate
  * @returns True if the header is valid, false otherwise
  */
-const isReuseCompliant = (file: IFile): boolean => {
+export function isReuseCompliant(file: IFile): boolean {
   return hasValidLicense(file) && hasValidCopyrightText(file);
-};
+}
 
-export { SoftwareBillOfMaterials, hasValidCopyrightText, hasValidLicense, isReuseCompliant, parseFile, IFile };
+/**
+ * Extracts all individual license names from the license information in file.
+ * @param file SPDX file to extract the licenses from
+ * @returns List of individual licenses
+ */
+export function getIndividualLicences(file: IFile): string[] {
+  return file.licenseInfoInFiles
+    .filter(license => license !== "NOASSERTION")
+    .map(license => license.split(/( AND | OR )/))
+    .flat()
+    .filter(license => license !== " AND " && license !== " OR ");
+}

@@ -6,6 +6,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
 import { ISourceFile } from "./interfaces";
 import * as spdx from "./spdx";
+import { getSourceFile, kebabToCamel } from "./utils";
 
 /**
  * Debian Package
@@ -59,16 +60,17 @@ interface IFilesStanza {
 // Regex which matches "key: value" with multiline support
 const DEBIAN_PACKAGE_REGEX = /(?<key>[^:]+):\s*(?<value>[^[\r\n]+]*([\r\n]+\s+[^[\r\n]+]*)*)/g;
 
-/**
- * Converts a kebab-case string to camelCase
- * @param str String to convert to camelCase
- * @returns camelCase string
- */
-function kebabToCamel(str: string): string {
-  return str
-    .split("-")
-    .map((word, index) => (index === 0 ? word.toLowerCase() : word[0].toUpperCase() + word.slice(1).toLowerCase()))
-    .join("");
+function getDebianKeyValuePairs(stanza: string): Record<string, string> {
+  const result: Record<string, string> = {};
+  const matches = stanza.matchAll(DEBIAN_PACKAGE_REGEX);
+  for (const match of matches) {
+    // Skip invalid matches
+    if (match?.groups === undefined) continue;
+
+    // Retrieve key/value pairs
+    result[kebabToCamel(match.groups.key.trim())] = match.groups.value.trim();
+  }
+  return result;
 }
 
 /**
@@ -81,43 +83,11 @@ function parseHeader(header: string): IDebianHeader {
     format: "1.0",
   };
 
-  const matches = header.matchAll(DEBIAN_PACKAGE_REGEX);
-  for (const match of matches) {
-    // Skip invalid matches
-    if (match?.groups === undefined) continue;
-
-    // Retrieve key/value pairs
-    const key = kebabToCamel(match.groups.key.trim());
-    const value = match.groups.value.trim();
-
-    // TODO: Remove the need for this switch statement
-    switch (key) {
-      case "format":
-        headerData.format = value;
-        break;
-      case "upstreamName":
-        headerData.upstreamName = value;
-        break;
-      case "upstreamContact":
-        headerData.upstreamContact = value;
-        break;
-      case "source":
-        headerData.source = value;
-        break;
-      case "disclaimer":
-        headerData.disclaimer = value;
-        break;
-      case "comment":
-        headerData.comment = value;
-        break;
-      case "license":
-        headerData.license = value;
-        break;
-      case "copyright":
-        headerData.copyright = value.split(/[\r\n]+/).map(line => line.trim());
-        break;
-    }
-  }
+  Object.entries(getDebianKeyValuePairs(header)).forEach(([key, value]) => {
+    const headerKey = key as keyof IDebianHeader;
+    if (headerKey === "copyright") headerData[headerKey] = value.split(/[\r\n]+/).map(line => line.trim());
+    else headerData[headerKey] = value;
+  });
 
   return headerData;
 }
@@ -134,16 +104,7 @@ function parseFileStanza(stanza: string): IFilesStanza {
     copyright: [],
   };
 
-  const matches = stanza.matchAll(DEBIAN_PACKAGE_REGEX);
-  for (const match of matches) {
-    // Skip invalid matches
-    if (match?.groups === undefined) continue;
-
-    // Retrieve key/value pairs
-    const key = kebabToCamel(match.groups.key.trim());
-    const value = match.groups.value.trim();
-
-    // TODO: Remove the need for this switch statement
+  Object.entries(getDebianKeyValuePairs(stanza)).forEach(([key, value]) => {
     switch (key) {
       case "files":
         filesStanza.files = value
@@ -161,7 +122,7 @@ function parseFileStanza(stanza: string): IFilesStanza {
         filesStanza.comment = value;
         break;
     }
-  }
+  });
 
   return filesStanza;
 }
@@ -173,9 +134,7 @@ function parseFileStanza(stanza: string): IFilesStanza {
 export function load(config: string): IDebianPackage | undefined {
   const stanzas = config.split(/[\r\n]+\s*[\r\n]+/);
 
-  if (stanzas.length === 0) {
-    throw new Error("No stanzas found");
-  }
+  if (stanzas.length === 0) throw new Error("No stanzas found");
 
   return {
     header: parseHeader(stanzas[0]),
@@ -200,14 +159,13 @@ export function load(config: string): IDebianPackage | undefined {
  */
 function wildcardMatch(fileName: string, pattern: string): boolean {
   if (pattern === "*") return true;
-  const regexp = new RegExp(
+
+  return new RegExp(
     `^${pattern
       .split("*")
       .map(s => s.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&"))
       .join(".*")}$`
-  );
-
-  return regexp.test(fileName);
+  ).test(fileName);
 }
 
 /**
@@ -221,21 +179,21 @@ export function licenseMap(debianPackage: IDebianPackage, files: ISourceFile[]):
 
   for (const packageFiles of debianPackage.files) {
     for (const patternFile of packageFiles.files) {
-      for (const file of files) {
-        const filePath = file.source === "original" ? file.filePath : file.licensePath;
-        if (wildcardMatch(filePath, patternFile)) {
-          // REUSE-IgnoreStart
-          const spdxFile = spdx.parseFile(
-            filePath,
-            `${packageFiles.copyright
-              .map(copyright => `SPDX-FileCopyrightText: ${copyright}`)
-              .join("\n")}\nSPDX-License-Identifier: ${packageFiles.license}`
-          );
-          // REUSE-IgnoreEnd
-
-          fileMap.set(filePath, spdxFile);
-        }
-      }
+      files
+        .filter(file => wildcardMatch(getSourceFile(file), patternFile))
+        .forEach(file =>
+          fileMap.set(
+            getSourceFile(file),
+            spdx.parseFile(
+              getSourceFile(file),
+              `${packageFiles.copyright
+                // REUSE-IgnoreStart
+                .map(copyright => `SPDX-FileCopyrightText: ${copyright}`)
+                .join("\n")}\nSPDX-License-Identifier: ${packageFiles.license}`
+              // REUSE-IgnoreEnd
+            )
+          )
+        );
     }
   }
 

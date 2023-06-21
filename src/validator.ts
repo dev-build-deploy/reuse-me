@@ -15,27 +15,16 @@ import { fileRequirements, projectRequirements } from "./requirements";
  * @returns List of validation results
  */
 export function validateFiles(sbom: spdx.SoftwareBillOfMaterials): IValidationResult[] {
-  const results: IValidationResult[] = [];
+  return sbom.files.map(file => {
+    const errors = fileRequirements
+      .map(req => req.validate(file))
+      .filter(errors => errors !== undefined)
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      .map(errors => errors!.errors.map(e => e.toString()))
+      .flat();
 
-  for (const file of sbom.files) {
-    const result: IValidationResult = {
-      file: file,
-      compliant: true,
-      errors: [],
-    };
-
-    for (const req of fileRequirements) {
-      const errors = req.validate(file);
-      if (errors === undefined) continue;
-
-      result.compliant = false;
-      result.errors.push(...errors.errors.map(e => e.toString()));
-    }
-
-    results.push(result);
-  }
-
-  return results;
+    return { file: file, compliant: errors.length === 0, errors: errors };
+  });
 }
 
 /**
@@ -45,19 +34,12 @@ export function validateFiles(sbom: spdx.SoftwareBillOfMaterials): IValidationRe
  * @returns Validation result
  */
 export function validateSBOM(sbom: spdx.SoftwareBillOfMaterials, licenses: string[]): IValidationResult {
-  const result: IValidationResult = {
-    file: sbom.files[0],
-    compliant: true,
-    errors: [],
-  };
+  const errors = projectRequirements
+    .map(req => req.validate(sbom, licenses))
+    .filter(errors => errors !== undefined)
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    .map(errors => errors!.errors.map(e => e.toString()))
+    .flat();
 
-  for (const req of projectRequirements) {
-    const errors = req.validate(sbom, licenses);
-    if (errors === undefined) continue;
-
-    result.compliant = false;
-    result.errors.push(...errors.errors.map(e => e.toString()));
-  }
-
-  return result;
+  return { file: sbom.files[0], compliant: errors.length === 0, errors: errors };
 }
