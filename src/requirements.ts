@@ -7,6 +7,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
 import { ExpressiveMessage } from "@dev-build-deploy/diagnose-it";
 import * as spdx from "./spdx";
 import * as fs from "fs";
+import { getIndividualLicences } from "./spdx";
 
 /**
  * Requirement interface
@@ -125,19 +126,11 @@ class PR01 implements IProjectRequirement {
   validate(sbom: spdx.ISoftwareBillOfMaterials): RequirementError | void {
     const error = new RequirementError(this, sbom.name);
 
-    const allLicenses: string[] = [];
-    const missingLicenses: string[] = [];
-
-    sbom.files.forEach(file => {
-      file.licenseInfoInFiles
-        .filter(license => license !== "NOASSERTION")
-        .forEach(license => {
-          if (allLicenses.includes(license) === false) allLicenses.push(license);
-          if (fs.existsSync(`./LICENSES/${license}.txt`) === false) {
-            if (missingLicenses.includes(license) === false) missingLicenses.push(license);
-          }
-        });
-    });
+    const allLicenses = sbom.files
+      .map(file => getIndividualLicences(file))
+      .flat()
+      .filter((value, index, array) => array.indexOf(value) === index);
+    const missingLicenses = allLicenses.filter(license => fs.existsSync(`./LICENSES/${license}.txt`) === false);
 
     missingLicenses.forEach(license => {
       error.addError(
@@ -161,13 +154,11 @@ class PR02 implements IProjectRequirement {
     const localLicenses = [...licenses];
 
     sbom.files.forEach(file => {
-      file.licenseInfoInFiles
-        .filter(license => license !== "NOASSERTION")
-        .forEach(license => {
-          if (localLicenses.includes(`LICENSES/${license}.txt`) === true)
-            localLicenses.splice(localLicenses.indexOf(`LICENSES/${license}.txt`), 1);
-          if (localLicenses.length === 0) return;
-        });
+      getIndividualLicences(file).forEach(license => {
+        if (localLicenses.includes(`LICENSES/${license}.txt`) === true)
+          localLicenses.splice(localLicenses.indexOf(`LICENSES/${license}.txt`), 1);
+        if (localLicenses.length === 0) return;
+      });
     });
 
     localLicenses.forEach(license => {
