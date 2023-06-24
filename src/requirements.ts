@@ -96,6 +96,9 @@ class FL01 implements IFileRequirement {
   }
 }
 
+/**
+ * The SPDX License Identifier (X) MUST be LicenseRef-[letters, numbers, ".", or "-"] as defined by the SPDX Specification
+ */
 class FL02 implements IFileRequirement {
   id = "FL02";
   description =
@@ -119,9 +122,12 @@ class FL02 implements IFileRequirement {
   }
 }
 
+/**
+ * The Project MUST include a License File for every license, but is missing (...)
+ */
 class PR01 implements IProjectRequirement {
   id = "PR01";
-  description = "The Project MUST include a License File for every license, but is missing X";
+  description = "The Project MUST include a License File for every license, but is missing (...)";
 
   validate(sbom: spdx.ISoftwareBillOfMaterials): RequirementError | void {
     const error = new RequirementError(this, sbom.name);
@@ -143,6 +149,9 @@ class PR01 implements IProjectRequirement {
   }
 }
 
+/**
+ * The Project MUST NOT include License Files (X) for licenses under which none of the files in the Project are licensed.
+ */
 class PR02 implements IProjectRequirement {
   id = "PR02";
   description =
@@ -173,5 +182,31 @@ class PR02 implements IProjectRequirement {
   }
 }
 
+/**
+ * The Project MUST NOT include duplicate SPDX identifiers (...).
+ */
+class PR03 implements IProjectRequirement {
+  id = "PR03";
+  description =
+    "The Project MUST NOT include duplicate SPDX identifiers (...).";
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  validate(sbom: spdx.ISoftwareBillOfMaterials, _licenses: string[]): RequirementError | void {
+    const error = new RequirementError(this, sbom.name);
+
+    const spdxIdentifiers = sbom.files.map(file => file.SPDXID);
+    spdxIdentifiers.forEach((value, index, array) => {
+      if (array.indexOf(value) !== index) {
+        error.addError(
+          ["Project MUST NOT include duplicate SPDX identifiers", value],
+          `The Project MUST NOT include duplicate SPDX identifiers (${value}).`
+        );
+      }
+    });
+
+    if (error.errors.length > 0) return error;
+  }
+}
+
 export const fileRequirements: IFileRequirement[] = [new FL01(), new FL02()];
-export const projectRequirements: IProjectRequirement[] = [new PR01(), new PR02()];
+export const projectRequirements: IProjectRequirement[] = [new PR01(), new PR02(), new PR03()];

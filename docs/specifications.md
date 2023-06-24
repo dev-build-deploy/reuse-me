@@ -21,3 +21,4 @@ ReuseMe currently has implemented two sets of validation rules:
 | --- | --- |
 | PR01 | The Project MUST include a License File for every license, but is missing `<LICENSE>` |
 | PR02 | The Project MUST NOT include License Files (`<LICENSE>`) for licenses under which none of the files in the Project are licensed. |
+| PR03 | The Project MUST NOT include duplicate SPDX identifiers (<SPDX-REF>). |
