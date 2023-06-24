@@ -185,7 +185,10 @@ export class SoftwareBillOfMaterials implements ISoftwareBillOfMaterials {
             !(
               file.filePath.startsWith("LICENSES/") ||
               file.filePath === ".reuse/dep5" ||
-              file.filePath === "LICENSE.txt"
+              file.filePath === "LICENSE.txt" ||
+              // We will not scan the .license file as stand-alone,
+              // but rather as part of the original file parser
+              file.source === "license"
             )
         )
         .map(file => this.createFile(file, debianLicenseMap))
@@ -328,6 +331,7 @@ export function hasValidCopyrightText(file: IFile): boolean {
 export function isReuseCompliant(file: IFile): boolean {
   return hasValidLicense(file) && hasValidCopyrightText(file);
 }
+
 
 /**
  * Extracts all individual license names from the license information in file.
