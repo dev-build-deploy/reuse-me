@@ -12,7 +12,6 @@ import { GitSource } from "../datasources";
 import { validateFiles, validateSBOM } from "../validator";
 import { SoftwareBillOfMaterials } from "../spdx";
 
-
 /**
  * Uploads the SBOM to GitHub Artifacts.
  * @param sbom The SBOM to upload
@@ -20,8 +19,8 @@ import { SoftwareBillOfMaterials } from "../spdx";
  */
 async function uploadSBOM(sbom: SoftwareBillOfMaterials): Promise<void> {
   const client = artifact.create();
-  fs.writeFileSync("sbom.json", JSON.stringify(sbom.toJSON(), null, 2))
-  await client.uploadArtifact("ReuseMe SBOM", ["sbom.json"], ".", {continueOnError: true})
+  fs.writeFileSync("sbom.json", JSON.stringify(sbom.toJSON(), null, 2));
+  await client.uploadArtifact("ReuseMe SBOM", ["sbom.json"], ".", { continueOnError: true });
   core.info("Uploaded Software Bill of Materials to GitHub Artifacts.");
 }
 

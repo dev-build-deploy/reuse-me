@@ -189,7 +189,7 @@ export function licenseMap(debianPackage: IDebianPackage, files: ISourceFile[]):
               `${packageFiles.copyright
                 // REUSE-IgnoreStart
                 .map(copyright => `SPDX-FileCopyrightText: ${copyright}`)
-                .join("\n")}\nSPDX-License-Identifier: ${packageFiles.license}`
+                .join("\n")}${packageFiles.license ? `\nSPDX-License-Identifier: ${packageFiles.license}` : ""}`
               // REUSE-IgnoreEnd
             )
           )
