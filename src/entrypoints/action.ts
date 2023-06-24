@@ -5,10 +5,25 @@ SPDX-License-Identifier: GPL-3.0-or-later
 */
 
 import * as core from "@actions/core";
+import * as artifact from "@actions/artifact";
+import * as fs from "fs";
 
 import { GitSource } from "../datasources";
 import { validateFiles, validateSBOM } from "../validator";
 import { SoftwareBillOfMaterials } from "../spdx";
+
+
+/**
+ * Uploads the SBOM to GitHub Artifacts.
+ * @param sbom The SBOM to upload
+
+ */
+async function uploadSBOM(sbom: SoftwareBillOfMaterials): Promise<void> {
+  const client = artifact.create();
+  fs.writeFileSync("sbom.json", JSON.stringify(sbom.toJSON(), null, 2))
+  await client.uploadArtifact("ReuseMe SBOM", ["sbom.json"], ".", {continueOnError: true})
+  core.info("Uploaded Software Bill of Materials to GitHub Artifacts.");
+}
 
 /**
  * Main entry point for the GitHub Action.
@@ -52,6 +67,7 @@ async function run(): Promise<void> {
       });
 
     if (errorCount === 0) {
+      await uploadSBOM(sbom);
       core.info(`✅ Found no REUSE compliance issues.`);
     } else {
       core.setFailed(`❌ Found ${errorCount} REUSE compliance issues.`);
