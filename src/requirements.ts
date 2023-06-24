@@ -187,8 +187,7 @@ class PR02 implements IProjectRequirement {
  */
 class PR03 implements IProjectRequirement {
   id = "PR03";
-  description =
-    "The Project MUST NOT include duplicate SPDX identifiers (...).";
+  description = "The Project MUST NOT include duplicate SPDX identifiers (...).";
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   validate(sbom: spdx.ISoftwareBillOfMaterials, _licenses: string[]): RequirementError | void {
