@@ -157,12 +157,12 @@ export class SoftwareBillOfMaterials implements ISoftwareBillOfMaterials {
 
     // First we check whether the file is matched in the Debian package configuration
     const debianFileLicense = debianLicenseMap.get(file.filePath);
-    if (debianFileLicense !== undefined && isReuseCompliant(debianFileLicense)) return debianFileLicense;
+    if (debianFileLicense !== undefined && (hasValidLicense(debianFileLicense) || hasValidCopyrightText(debianFileLicense))) return debianFileLicense;
 
     // Next we check for an available .license file, as part of optimization for large
     // binary files.
     const licenseFileLicense = parseFile(fileName, await this.datasource.getFileContents(file.licensePath));
-    if (isReuseCompliant(licenseFileLicense)) return licenseFileLicense;
+    if (hasValidLicense(licenseFileLicense) || hasValidCopyrightText(licenseFileLicense)) return licenseFileLicense;
 
     // Otherwise, we check the original file.
     return parseFile(fileName, await this.datasource.getFileContents(file.filePath));
