@@ -30,6 +30,19 @@ ReuseMe provides a [Command Line Interface](#local-development-command-line-inte
     ...
   }
   ```
+Hub is a lot of things, but it’s not a law firm. As such, GitHub does not provide legal advice. Using the API or sending us an email about it does not constitute legal advice nor does it create an attorney-client relationship. If you have any questions about what you can and can't do with a particular license, you should consult with your own legal counsel before moving forward. In fact, you should always consult with your own lawyer before making any decisions that might have legal ramifications or that may impact your legal rights.
+
+GitHub created these endpoints to help users get information about open source licenses and the projects that use them. We hope it helps, but please keep in mind that we’re not lawyers (at least most of us aren't) and that we make mistakes like everyone else. For that reason, GitHub provides the API on an "as-is" basis and makes no warranties regarding any information or licenses provided on or through it, and disclaims liability for damages resulting from using the API.
+
+> ⚠️ **NOTE** ⚠️
+> 
+> ReuseMe (and its owner) are not part of a law firm and, as such, the owner nor the application provide legal advise.
+> Using ReuseME does not constitute legal advice or create an attorney-client relationship.
+> 
+> ReuseMe is created for the aggregation of Copyright and License information provided by the users in the files stored in their repositories.
+> In the end, the users of ReuseMe are responsible for the correctness of the generated Software Bill of Materials, the associated licenses, and attributions.
+> For that reason, ReuseMe is provided on an "as-is" basis and makes no warranties regarding any information or licenses provided on or through it, and disclaims liability for damages resulting from using the application.
+
 
 ## CICD validation (GitHub Actions)
 
