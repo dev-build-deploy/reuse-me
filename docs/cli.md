@@ -26,64 +26,33 @@ $ reuse-me
 
 You can find more information about the possible commands with the `--help` flag, i.e.:
 
+
+
 ```sh
 $ reuse-me --help
 
-Usage: reuse-me [options] [command]
+Usage: reuse-me [options]
 
 Copyright and License management CLI tool
 
 Options:
-  -h, --help       display help for command
+  -s, --sbom-output <file>  output path for the Software Bill of Materials (SBOM)
+  -h, --help                display help for command
 
-Commands:
-  check [options]  Checks whether the repository is compliant with the Reuse Specification.
-  help [command]   display help for command
-```
-
-### Validate your repository
-
-Running the `check` command will perform local validation of your repository.
-
-```sh
-$ reuse-me check --help
-
-Usage: reuse-me check [options]
-
-Checks whether the repository is compliant with the Reuse Specification.
-
-Options:
-  -h, --help  display help for command
 ```
 
 By default, ReuseMe will use information from `git` to exclude ignored files.
 
-```sh
-$ reuse-me check
-```
-
 <img src="./images/cli_example.svg">
 
-### Generate Software Bill of Materials
+### Software Bill of Materials
 
-You can generate a SPDX 2.3 compliant Software Bill of Materials (SBOM) using the `sbom` command.
+You can generate a SPDX 2.3 compliant Software Bill of Materials (SBOM) by specifying the `--sbom-output` option;
 
 ```sh
-$ reuse-me sbom --help
-
-Usage: reuse-me sbom [options]
-
-Generates a Software Bill of Materials (SBOM) for the repository.
-
-Options:
-  -h, --help  display help for command
+$ reuse-me --sbom-output sbom.json
 ```
 
-The result is redirected to your stdout.
-
-> **NOTE**:\
-This command will generate a SBOM based on the provided information - this also means that it will included files not correctly attributed according to the [Reuse specification].\
-\
-Please refer to [the validation instructions](#validate-your-repository) for more details.
+The result is redirected to the specified file.
 
 [Reuse specification]: https://reuse.software/spec/
