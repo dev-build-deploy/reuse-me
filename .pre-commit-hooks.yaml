@@ -1,0 +1,8 @@
+# SPDX-FileCopyrightText: 2023 Kevin de Jong <monkaii@hotmail.com>
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+- id: reuse-me
+  name: ReuseMe - ReuseMe - License and Copyright validation
+  description: Validates your repository against the REUSE specification
+  entry: reuse-me
+  language: node

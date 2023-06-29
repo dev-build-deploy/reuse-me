@@ -4,9 +4,9 @@ SPDX-FileCopyrightText: 2023 Kevin de Jong <monkaii@hotmail.com>
 SPDX-License-Identifier: GPL-3.0-or-later
 -->
 
-# ReuseMe
+# ReuseMe - License and Copyright Management
 
-ReuseMe provides a [Command Line Interface](#local-development-command-line-interface) and [integration with GitHub Actions](#cicd-validation-github-actions) for managing software licensing and copyright attributions, including support for:
+ReuseMe provides a [Pre-commit hook](#pre-commit), [Command Line Interface](#local-development-command-line-interface) and [integration with GitHub Actions](#cicd-validation-github-actions) for managing software licensing and copyright attributions, including support for:
 
 * [Validation](./docs/specifications.md) of your files against the [Reuse specification]
 <img src="./docs/images/cli_example.svg">
@@ -40,6 +40,24 @@ ReuseMe provides a [Command Line Interface](#local-development-command-line-inte
 > In the end, the users of ReuseMe are responsible for the correctness of the generated Software Bill of Materials, the associated licenses, and attributions.
 > For that reason, ReuseMe is provided on an "as-is" basis and makes no warranties regarding any information or licenses provided on or through it, and disclaims liability for damages resulting from using the application.
 
+## Pre-commit hook
+
+You can add ReuseMe as a [pre-commit](https://pre-commit.com) by:
+
+1. [Installing pre-commit](https://pre-commit.com/#install)
+2. Including ReuseMe in your `.pre-commit.config.yaml` file, e.g.:
+
+```yaml
+repos:
+- repo: https://github.com/dev-build-deploy/reuse-me
+  rev: v0.8.0
+  hooks:
+  - id: reuse-me
+```
+3. Installing the hooks
+```
+$ pre-commit install
+```
 
 ## CICD validation (GitHub Actions)
 
@@ -63,10 +81,10 @@ _You can find more details in the [dedicated documentation](./docs/github-action
 
 ## Local Development (Command Line Interface)
 
-Performing local validation is as simple as running the `check` command...
+Performing local validation is as simple as running the `reuse-me` CLI tool;
 
 ```sh
-$ reuse-me check
+$ reuse-me
 ```
 
 _You can find more details in the [dedicated documentation](./docs/cli.md)_
