@@ -9,6 +9,7 @@ import * as debian from "./debian";
 import { ISourceFile } from "./interfaces";
 import * as crypto from "crypto";
 import { getSourceFile } from "./utils";
+import * as commentIt from "@dev-build-deploy/comment-it";
 
 type IFileType =
   | "SOURCE"
@@ -165,11 +166,11 @@ export class SoftwareBillOfMaterials implements ISoftwareBillOfMaterials {
 
     // Next we check for an available .license file, as part of optimization for large
     // binary files.
-    const licenseFileLicense = parseFile(fileName, await this.datasource.getFileContents(file.licensePath));
+    const licenseFileLicense = await parseFile(fileName)//, await this.datasource.getFileContents(file.licensePath));
     if (hasValidLicense(licenseFileLicense) || hasValidCopyrightText(licenseFileLicense)) return licenseFileLicense;
 
     // Otherwise, we check the original file.
-    return parseFile(fileName, await this.datasource.getFileContents(file.filePath));
+    return await parseFile(fileName);//, await this.datasource.getFileContents(file.filePath));
   }
 
   /**
@@ -179,7 +180,7 @@ export class SoftwareBillOfMaterials implements ISoftwareBillOfMaterials {
   private async gatherFiles(): Promise<IFile[]> {
     const changedFiles = await this.datasource.getFiles();
     const debianConfig = debian.load(await this.datasource.getFileContents(".reuse/dep5", false));
-    const debianLicenseMap = debianConfig ? debian.licenseMap(debianConfig, changedFiles) : new Map<string, IFile>();
+    const debianLicenseMap = debianConfig ? await debian.licenseMap() : new Map<string, IFile>();
 
     // Validate each file asynchronously
     return await Promise.all(
@@ -234,10 +235,10 @@ export class SoftwareBillOfMaterials implements ISoftwareBillOfMaterials {
  * @param contents Contents of the file
  * @returns SPDX File entry
  */
-export function parseFile(fileName: string, contents: string): IFile {
+export async function parseFile(fileName: string): Promise<IFile> {
   const file: IFile = {
     SPDXID: `SPDXRef-${crypto.createHash("SHA1").update(fileName).digest("hex")}`,
-    checksums: [{ algorithm: "SHA1", checksumValue: crypto.createHash("SHA1").update(contents).digest("hex") }],
+    checksums: [{ algorithm: "SHA1", checksumValue: crypto.createHash("SHA1").update(fileName).digest("hex") }],
     fileContributors: [],
     fileName: fileName.startsWith("./") ? fileName : `./${fileName}`,
     fileTypes: [],
@@ -246,73 +247,77 @@ export function parseFile(fileName: string, contents: string): IFile {
     attributionTexts: [],
   };
 
-  // REUSE-IgnoreStart
-  const SPDXLicenseHeaderRegex = /SPDX-License-Identifier:\s*(?<identifier>(.*)+)/g;
-  const SPDXCopyrightRegex = /^[\W]*(©|[Cc]opyright|\([Cc]\)|SPDX-FileCopyrightText:)\s+(?<identifier>(.*)+)/gm;
-  const SPDXCopyrightIdentifierRegex = /(?<year>[\d,-\s]*)\s*(?<copyrightHolder>[^<\n\r]*)\s(<(?<contactAddress>.*)>)?/;
-  const SPDXFileTagRegex = /SPDX-File(?<key>[A-Za-z]*):\s*(?<value>.*)/g;
-  const ReuseIgnoreRegex = /REUSE-IgnoreStart[\s\S]*REUSE-IgnoreEnd/g;
-  // REUSE-IgnoreEnd
+  if (!commentIt.isSupported(fileName)) return file;
+  for await (const comment of commentIt.extractComments(fileName, { maxLines: 20 })) {
+    const contents = comment.contents.map(line => line.value).join("\n")
 
-  // Remove all REUSE-Ignore blocks from the file
-  const strippedContents = contents.replace(ReuseIgnoreRegex, "");
+    // REUSE-IgnoreStart
+    const SPDXLicenseHeaderRegex = /SPDX-License-Identifier:\s*(?<identifier>(.*)+)/g;
+    const SPDXCopyrightRegex = /^[\W]*(©|[Cc]opyright|\([Cc]\)|SPDX-FileCopyrightText:)\s+(?<identifier>(.*)+)/gm;
+    const SPDXCopyrightIdentifierRegex = /(?<year>[\d,-\s]*)\s*(?<copyrightHolder>[^<\n\r]*)\s(<(?<contactAddress>.*)>)?/;
+    const SPDXFileTagRegex = /SPDX-File(?<key>[A-Za-z]*):\s*(?<value>.*)/g;
+    const ReuseIgnoreRegex = /REUSE-IgnoreStart[\s\S]*REUSE-IgnoreEnd/g;
+    // REUSE-IgnoreEnd
 
-  // Ensure that this file contains the minimum set of headers to be REUSE 3.0 compliant
-  const licenseMatches = strippedContents.matchAll(SPDXLicenseHeaderRegex);
-  for (const match of licenseMatches) {
-    if (match?.groups === undefined) continue;
-    const license = match.groups?.identifier.trim();
-    if (!file.licenseInfoInFiles.includes(license)) file.licenseInfoInFiles.push(license);
-  }
+    // Remove all REUSE-Ignore blocks from the file
+    const strippedContents = contents.replace(ReuseIgnoreRegex, "");
 
-  const copyrightMatches = strippedContents.matchAll(SPDXCopyrightRegex);
-  for (const match of copyrightMatches) {
-    if (match?.groups === undefined) continue;
-    if (file.copyrightText !== undefined) continue;
-    if (SPDXCopyrightIdentifierRegex.test(match.groups.identifier) === false) continue;
-    file.copyrightText = match.groups.identifier.trim();
-  }
+    // Ensure that this file contains the minimum set of headers to be REUSE 3.0 compliant
+    const licenseMatches = strippedContents.matchAll(SPDXLicenseHeaderRegex);
+    for (const match of licenseMatches) {
+      if (match?.groups === undefined) continue;
+      const license = match.groups?.identifier.trim();
+      if (!file.licenseInfoInFiles.includes(license)) file.licenseInfoInFiles.push(license);
+    }
 
-  const fileTagMatches = strippedContents.matchAll(SPDXFileTagRegex);
+    const copyrightMatches = strippedContents.matchAll(SPDXCopyrightRegex);
+    for (const match of copyrightMatches) {
+      if (match?.groups === undefined) continue;
+      if (file.copyrightText !== undefined) continue;
+      if (SPDXCopyrightIdentifierRegex.test(match.groups.identifier) === false) continue;
+      file.copyrightText = match.groups.identifier.trim();
+    }
 
-  for (const match of fileTagMatches) {
-    if (match?.groups === undefined) continue;
-    const key = match.groups.key.trim();
-    const value = match.groups.value.trim();
+    const fileTagMatches = strippedContents.matchAll(SPDXFileTagRegex);
 
-    switch (key) {
-      case "AttributionText":
-        file.attributionTexts.push(value);
-        break; // TODO: Multiline support
-      case "Comment":
-        file.comment = value;
-        break; // TODO: Multiline support
-      case "Contributor":
-        file.fileContributors.push(value);
-        break;
-      case "LicenseComments":
-        file.licenseComments = value;
-        break; // TODO: Multiline support
-      case "LicenseConcluded":
-        file.licenseConcluded = value;
-        break;
-      case "LicenseInfoInFile":
-        if (file.licenseInfoInFiles.includes(value) === false) file.licenseInfoInFiles.push(value);
-        break;
-      case "Notice":
-        file.notice = value;
-        break; // TODO: Multiline support
-      case "Type":
-        file.fileTypes.push(value as IFileType);
-        break; // TODO: Literal type checking
+    for (const match of fileTagMatches) {
+      if (match?.groups === undefined) continue;
+      const key = match.groups.key.trim();
+      const value = match.groups.value.trim();
+
+      switch (key) {
+        case "AttributionText":
+          file.attributionTexts.push(value);
+          break; // TODO: Multiline support
+        case "Comment":
+          file.comment = value;
+          break; // TODO: Multiline support
+        case "Contributor":
+          file.fileContributors.push(value);
+          break;
+        case "LicenseComments":
+          file.licenseComments = value;
+          break; // TODO: Multiline support
+        case "LicenseConcluded":
+          file.licenseConcluded = value;
+          break;
+        case "LicenseInfoInFile":
+          if (file.licenseInfoInFiles.includes(value) === false) file.licenseInfoInFiles.push(value);
+          break;
+        case "Notice":
+          file.notice = value;
+          break; // TODO: Multiline support
+        case "Type":
+          file.fileTypes.push(value as IFileType);
+          break; // TODO: Literal type checking
+      }
+    }
+
+    if (file.licenseInfoInFiles.length > 1) {
+      // Remove the element "NOASSERTION" if there are other licenses specified in the "LicenseInfoInFile
+      file.licenseInfoInFiles = file.licenseInfoInFiles.filter(license => license !== "NOASSERTION");
     }
   }
-
-  if (file.licenseInfoInFiles.length > 1) {
-    // Remove the element "NOASSERTION" if there are other licenses specified in the "LicenseInfoInFile
-    file.licenseInfoInFiles = file.licenseInfoInFiles.filter(license => license !== "NOASSERTION");
-  }
-
   return file;
 }
 
