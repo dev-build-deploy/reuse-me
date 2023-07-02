@@ -21,7 +21,7 @@ program
   .name("reuse-me")
   .description("Copyright and License management CLI tool")
   .option("-s, --sbom-output <file>", "Output path for the Software Bill of Materials (SBOM).")
-  .action(async (options) => {
+  .action(async options => {
     console.log("📄 ReuseMe - REUSE compliance validation");
     console.log("----------------------------------------");
     console.log();
@@ -58,10 +58,10 @@ program
       console.log(`✅ Found no REUSE compliance issues.`);
 
       if (options.sbomOutput) {
-        console.log()
+        console.log();
         console.log("----------------------------------------");
         console.log(`✏️  Writing Software Bill of Materials file...`);
-        fs.writeFileSync(options.sbomOutput, JSON.stringify(sbom.toJSON(), null, 2))
+        fs.writeFileSync(options.sbomOutput, JSON.stringify(sbom.toJSON(), null, 2));
       }
     } else {
       program.error(`❌ Found ${errorCount} REUSE compliance issues.`);
