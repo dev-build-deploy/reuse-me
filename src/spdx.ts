@@ -248,7 +248,7 @@ export async function parseFile(fileName: string): Promise<IFile> {
   };
 
   if (!commentIt.isSupported(fileName)) return file;
-  for await (const comment of commentIt.extractComments(fileName, { maxLines: 50 })) {
+  for await (const comment of commentIt.extractComments(fileName, { maxLines: 20 })) {
     const contents = comment.contents.map(line => line.value).join("\n")
 
     // REUSE-IgnoreStart
