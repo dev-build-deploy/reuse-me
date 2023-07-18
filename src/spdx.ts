@@ -1,6 +1,5 @@
 /* 
 SPDX-FileCopyrightText: 2023 Kevin de Jong <monkaii@hotmail.com>
-
 SPDX-License-Identifier: GPL-3.0-or-later
 */
 
@@ -166,11 +165,11 @@ export class SoftwareBillOfMaterials implements ISoftwareBillOfMaterials {
 
     // Next we check for an available .license file, as part of optimization for large
     // binary files.
-    const licenseFileLicense = await parseFile(fileName)//, await this.datasource.getFileContents(file.licensePath));
+    const licenseFileLicense = await parseFile(fileName);
     if (hasValidLicense(licenseFileLicense) || hasValidCopyrightText(licenseFileLicense)) return licenseFileLicense;
 
     // Otherwise, we check the original file.
-    return await parseFile(fileName);//, await this.datasource.getFileContents(file.filePath));
+    return await parseFile(fileName);
   }
 
   /**
@@ -180,7 +179,7 @@ export class SoftwareBillOfMaterials implements ISoftwareBillOfMaterials {
   private async gatherFiles(): Promise<IFile[]> {
     const changedFiles = await this.datasource.getFiles();
     const debianConfig = debian.load(await this.datasource.getFileContents(".reuse/dep5", false));
-    const debianLicenseMap = debianConfig ? await debian.licenseMap() : new Map<string, IFile>();
+    const debianLicenseMap = debianConfig ? await debian.licenseMap(debianConfig, changedFiles) : new Map<string, IFile>();
 
     // Validate each file asynchronously
     return await Promise.all(
@@ -248,6 +247,7 @@ export async function parseFile(fileName: string): Promise<IFile> {
   };
 
   if (!commentIt.isSupported(fileName)) return file;
+
   for await (const comment of commentIt.extractComments(fileName, { maxLines: 20 })) {
     const contents = comment.contents.map(line => line.value).join("\n")
 

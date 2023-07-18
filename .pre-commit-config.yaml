@@ -7,6 +7,6 @@ repos:
   hooks:
   - id: commit-me
 - repo: https://github.com/dev-build-deploy/reuse-me
-  rev: refs/heads/feat/pre-commit-hook
+  rev: v0.8.0
   hooks:
   - id: reuse-me

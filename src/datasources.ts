@@ -1,6 +1,5 @@
 /* 
 SPDX-FileCopyrightText: 2023 Kevin de Jong <monkaii@hotmail.com>
-
 SPDX-License-Identifier: GPL-3.0-or-later
 */
 
@@ -86,18 +85,14 @@ class GitSource implements IDataSource {
   }
 
   public async getFiles(): Promise<ISourceFile[]> {
-    const changedFiles: ISourceFile[] = [];
     const rootPath = await this.getRootPath();
-
     const files = await this.listFiles(rootPath);
-    for (const file of files) {
-      changedFiles.push({
-        source: file.endsWith(".license") ? "license" : "original",
-        filePath: file.endsWith(".license") ? file.replace(".license", "") : file,
-        licensePath: file.endsWith(".license") ? file : `${file}.license`,
-      });
-    }
-    return changedFiles;
+
+    return files.map(file => { return {
+      source: file.endsWith(".license") ? "license" : "original",
+      filePath: file.endsWith(".license") ? file.replace(".license", "") : file,
+      licensePath: file.endsWith(".license") ? file : `${file}.license`,
+    }})
   }
 
   /**

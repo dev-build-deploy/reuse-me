@@ -1,11 +1,12 @@
 /* 
 SPDX-FileCopyrightText: 2023 Kevin de Jong <monkaii@hotmail.com>
-
 SPDX-License-Identifier: GPL-3.0-or-later
 */
 
+import { ISourceFile } from "./interfaces";
 import * as spdx from "./spdx";
-import { kebabToCamel } from "./utils";
+import * as fs from "fs";
+import { getSourceFile, kebabToCamel } from "./utils";
 
 /**
  * Debian Package
@@ -173,28 +174,25 @@ export function wildcardMatch(fileName: string, pattern: string): boolean {
  * @param files List of files to map agains the Debian package configuration
  * @returns A map of files to their respective SPDX headers
  */
-export async function licenseMap(): Promise<Map<string, spdx.IFile>> {
+export async function licenseMap(debianPackage: IDebianPackage, files: ISourceFile[]): Promise<Map<string, spdx.IFile>> {
   const fileMap = new Map<string, spdx.IFile>();
 
-  /*for (const packageFiles of debianPackage.files) {
+  for (const packageFiles of debianPackage.files) {
     for (const patternFile of packageFiles.files) {
       files
         .filter(file => wildcardMatch(getSourceFile(file), patternFile))
-        .forEach(file =>
+        .forEach(async file => {
+          fs.writeFileSync(`${getSourceFile(file)}.deb5`, `${packageFiles.copyright
+            .map(copyright => `SPDX-FileCopyrightText: ${copyright}`)
+            .join("\n")}${packageFiles.license ? `\nSPDX-License-Identifier: ${packageFiles.license}` : ""}`);
           fileMap.set(
             getSourceFile(file),
-            spdx.parseFile(
-              getSourceFile(file),
-              `${packageFiles.copyright
-                // REUSE-IgnoreStart
-                .map(copyright => `SPDX-FileCopyrightText: ${copyright}`)
-                .join("\n")}${packageFiles.license ? `\nSPDX-License-Identifier: ${packageFiles.license}` : ""}`
-              // REUSE-IgnoreEnd
-            )
+            await spdx.parseFile(`${getSourceFile(file)}.deb5`)
           )
-        );
+        }
+      );
     }
-  }*/
+  }
 
   return fileMap;
 }
