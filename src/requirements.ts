@@ -1,8 +1,9 @@
-/* 
-SPDX-FileCopyrightText: 2023 Kevin de Jong <monkaii@hotmail.com>
+/*
+ * SPDX-FileCopyrightText: 2023 Kevin de Jong <monkaii@hotmail.com>
+ * SPDX-License-Identifier: MIT
+ */
 
-SPDX-License-Identifier: GPL-3.0-or-later
-*/
+import * as reuse from "@dev-build-deploy/reuse-it";
 
 import { ExpressiveMessage } from "@dev-build-deploy/diagnose-it";
 import * as spdx from "./spdx";
@@ -21,11 +22,11 @@ interface IRequirement {
 }
 
 interface IFileRequirement extends IRequirement {
-  validate(spdxFile: spdx.IFile): RequirementError | void;
+  validate(spdxFile: reuse.SpdxFile): RequirementError | void;
 }
 
 interface IProjectRequirement extends IRequirement {
-  validate(sbom: spdx.ISoftwareBillOfMaterials, licenses: string[]): RequirementError | void;
+  validate(sbom: reuse.SoftwareBillOfMaterials, licenses: string[]): RequirementError | void;
 }
 
 /**
@@ -84,14 +85,14 @@ class FL01 implements IFileRequirement {
   id = "FL01";
   description = "Each Covered File MUST have Copyright and Licensing Information associated with it";
 
-  validate(spdxFile: spdx.IFile): RequirementError | void {
+  validate(spdxFile: reuse.SpdxFile): RequirementError | void {
     const error = new RequirementError(this, spdxFile.fileName);
 
     if (spdx.hasValidCopyrightText(spdxFile) === false)
       error.addError(["Each Covered File MUST have Copyright", "Information"]);
     if (spdx.hasValidLicense(spdxFile) === false)
       error.addError(["Each Covered File MUST have", "Licensing Information"]);
-
+    
     if (error.errors.length > 0) return error;
   }
 }
@@ -104,7 +105,7 @@ class FL02 implements IFileRequirement {
   description =
     'The SPDX License Identifier (X) MUST be LicenseRef-[letters, numbers, ".", or "-"] as defined by the SPDX Specification';
 
-  validate(spdxFile: spdx.IFile): RequirementError | void {
+  validate(spdxFile: reuse.SpdxFile): RequirementError | void {
     const error = new RequirementError(this, spdxFile.fileName);
 
     spdxFile.licenseInfoInFiles
@@ -129,7 +130,7 @@ class PR01 implements IProjectRequirement {
   id = "PR01";
   description = "The Project MUST include a License File for every license, but is missing (...)";
 
-  validate(sbom: spdx.ISoftwareBillOfMaterials): RequirementError | void {
+  validate(sbom: reuse.SoftwareBillOfMaterials): RequirementError | void {
     const error = new RequirementError(this, sbom.name);
 
     const allLicenses = sbom.files
@@ -157,7 +158,7 @@ class PR02 implements IProjectRequirement {
   description =
     "The Project MUST NOT include License Files (X) for licenses under which none of the files in the Project are licensed.";
 
-  validate(sbom: spdx.ISoftwareBillOfMaterials, licenses: string[]): RequirementError | void {
+  validate(sbom: reuse.SoftwareBillOfMaterials, licenses: string[]): RequirementError | void {
     const error = new RequirementError(this, sbom.name);
 
     const localLicenses = [...licenses];
@@ -190,7 +191,7 @@ class PR03 implements IProjectRequirement {
   description = "The Project MUST NOT include duplicate SPDX identifiers (...).";
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  validate(sbom: spdx.ISoftwareBillOfMaterials, _licenses: string[]): RequirementError | void {
+  validate(sbom: reuse.SoftwareBillOfMaterials, _licenses: string[]): RequirementError | void {
     const error = new RequirementError(this, sbom.name);
 
     const spdxIdentifiers = sbom.files.map(file => file.SPDXID);
