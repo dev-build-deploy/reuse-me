@@ -1,12 +1,12 @@
-/* 
-SPDX-FileCopyrightText: 2023 Kevin de Jong <monkaii@hotmail.com>
+/*
+ * SPDX-FileCopyrightText: 2023 Kevin de Jong <monkaii@hotmail.com>
+ * SPDX-License-Identifier: MIT
+ */
 
-SPDX-License-Identifier: GPL-3.0-or-later
-*/
+import * as reuse from "@dev-build-deploy/reuse-it";
 
 import { IValidationResult } from "./interfaces";
 
-import * as spdx from "./spdx";
 import { fileRequirements, projectRequirements } from "./requirements";
 
 /**
@@ -14,7 +14,7 @@ import { fileRequirements, projectRequirements } from "./requirements";
  * @param sbom The SBOM containing the files to validate
  * @returns List of validation results
  */
-export function validateFiles(sbom: spdx.SoftwareBillOfMaterials): IValidationResult[] {
+export function validateFiles(sbom: reuse.SoftwareBillOfMaterials): IValidationResult[] {
   return sbom.files.map(file => {
     const errors = fileRequirements
       .map(req => req.validate(file))
@@ -33,7 +33,7 @@ export function validateFiles(sbom: spdx.SoftwareBillOfMaterials): IValidationRe
  * @param licenses List of licenses stored in LICENSES/
  * @returns Validation result
  */
-export function validateSBOM(sbom: spdx.SoftwareBillOfMaterials, licenses: string[]): IValidationResult {
+export function validateSBOM(sbom: reuse.SoftwareBillOfMaterials, licenses: string[]): IValidationResult {
   const errors = projectRequirements
     .map(req => req.validate(sbom, licenses))
     .filter(errors => errors !== undefined)

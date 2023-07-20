@@ -1,22 +1,9 @@
-/* 
-SPDX-FileCopyrightText: 2023 Kevin de Jong <monkaii@hotmail.com>
-
-SPDX-License-Identifier: GPL-3.0-or-later
-*/
-
-import * as spdx from "./spdx";
-
-/**
- * File information
- * @interface IFile
- * @member path The path to the file
- * @member modification The modification type
+/*
+ * SPDX-FileCopyrightText: 2023 Kevin de Jong <monkaii@hotmail.com>
+ * SPDX-License-Identifier: MIT
  */
-export interface ISourceFile {
-  source: "license" | "original";
-  filePath: string;
-  licensePath: string;
-}
+
+import * as reuse from "@dev-build-deploy/reuse-it"
 
 /**
  * Validation results
@@ -26,7 +13,7 @@ export interface ISourceFile {
  * @member header Associated SPDX Header (if compliant)
  */
 export interface IValidationResult {
-  file: spdx.IFile;
+  file: reuse.SpdxFile;
   compliant: boolean;
   errors: string[];
 }

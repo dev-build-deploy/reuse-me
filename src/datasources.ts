@@ -1,47 +1,22 @@
-/* 
-SPDX-FileCopyrightText: 2023 Kevin de Jong <monkaii@hotmail.com>
-
-SPDX-License-Identifier: GPL-3.0-or-later
-*/
+/*
+ * SPDX-FileCopyrightText: 2023 Kevin de Jong <monkaii@hotmail.com>
+ * SPDX-License-Identifier: MIT
+ */
 
 import simpleGit from "simple-git";
-import { ISourceFile } from "./interfaces";
 
 import * as path from "path";
 import * as fs from "fs";
 
-interface IDataSource {
-  /**
-   * Determines which files have been changed as part of the push.
-   * @param context The context of the event
-   * @returns The list of files that have been changed
-   */
-  getFiles(): Promise<ISourceFile[]>;
-
-  /**
-   * Retrieves the contents of the provided file.
-   * @param file The file to retrieve the contents of
-   * @returns The contents of the file
-   */
-  getFileContents(file: string, buffer?: boolean): Promise<string>;
+/**
+ * Git data source for determining which files need to be validated.
+ */
+class GitSource {
+  __ROOT_PATH: string | undefined = undefined;
 
   /**
    * Retrieves the name of the repository.
    */
-  getRepositoryName(): Promise<string>;
-
-  /**
-   * Retrieves the list of license files stored in LICENSES/.
-   */
-  getLicenseFiles(): Promise<string[]>;
-}
-
-/**
- * Git data source for determining which files need to be validated.
- */
-class GitSource implements IDataSource {
-  __ROOT_PATH: string | undefined = undefined;
-
   public async getRepositoryName(): Promise<string> {
     return path.basename(await this.getRootPath());
   }
@@ -60,6 +35,9 @@ class GitSource implements IDataSource {
     return this.__ROOT_PATH;
   }
 
+  /**
+   * Retrieves the list of license files stored in LICENSES/.
+   */
   async getLicenseFiles(): Promise<string[]> {
     const rootPath = await this.getRootPath();
     const files = await this.listFiles(rootPath);
@@ -85,19 +63,15 @@ class GitSource implements IDataSource {
     }
   }
 
-  public async getFiles(): Promise<ISourceFile[]> {
-    const changedFiles: ISourceFile[] = [];
+  /**
+   * Determines which files have been changed as part of the push.
+   * @param context The context of the event
+   * @returns The list of files that have been changed
+   */
+  public async getFiles(): Promise<string[]> {
     const rootPath = await this.getRootPath();
 
-    const files = await this.listFiles(rootPath);
-    for (const file of files) {
-      changedFiles.push({
-        source: file.endsWith(".license") ? "license" : "original",
-        filePath: file.endsWith(".license") ? file.replace(".license", "") : file,
-        licensePath: file.endsWith(".license") ? file : `${file}.license`,
-      });
-    }
-    return changedFiles;
+    return await this.listFiles(rootPath);
   }
 
   /**
@@ -129,6 +103,11 @@ class GitSource implements IDataSource {
     return fileData;
   }
 
+  /**
+   * Retrieves the contents of the provided file.
+   * @param file The file to retrieve the contents of
+   * @returns The contents of the file
+   */
   public async getFileContents(file: string, buffer?: boolean): Promise<string> {
     if (fs.existsSync(file) === false) return "";
     if (buffer) return this.readBuffer(file);
@@ -136,4 +115,4 @@ class GitSource implements IDataSource {
   }
 }
 
-export { IDataSource, GitSource };
+export { GitSource };
