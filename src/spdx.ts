@@ -5,6 +5,11 @@
 
 import * as reuse from "@dev-build-deploy/reuse-it";
 
+/**
+ * Checks whether the provided file has a valid SPDX license.
+ * @param file SPDX file to validate
+ * @returns True if the file has a valid license, false otherwise
+ */
 export function hasValidLicense(file: reuse.SpdxFile): boolean {
   return (
     file.licenseInfoInFiles.length > 0 &&
@@ -12,6 +17,11 @@ export function hasValidLicense(file: reuse.SpdxFile): boolean {
   );
 }
 
+/**
+ * Checks whether the provided file has a valid SPDX copyright statement.
+ * @param file SPDX file to validate
+ * @returns True if the file has a valid copyright statement, false otherwise
+ */
 export function hasValidCopyrightText(file: reuse.SpdxFile): boolean {
   return file.copyrightText !== undefined && file.copyrightText !== "";
 }
