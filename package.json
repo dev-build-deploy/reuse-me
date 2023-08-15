@@ -17,7 +17,7 @@
     "build": "run-p build:*",
     "build:cli": "ncc build -o lib/cli src/entrypoints/cli.ts",
     "build:action": "ncc build -o lib/action src/entrypoints/action.ts",
-    "test": "jest",
+    "test": "jest --coverage",
     "lint": "eslint --ext .ts .",
     "format": "prettier --write **/*.ts && prettier --write **/**/*.ts"
   },
@@ -30,6 +30,7 @@
     "@actions/github": "^5.1.1",
     "@dev-build-deploy/diagnose-it": "<1",
     "@dev-build-deploy/reuse-it": "<1",
+    "@dev-build-deploy/sarif-it": "^0.1.0",
     "commander": "^10.0.1",
     "simple-git": "^3.19.0"
   },

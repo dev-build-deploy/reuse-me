@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: MIT
  */
 
+import * as diagnostics from "@dev-build-deploy/diagnose-it";
 import * as reuse from "@dev-build-deploy/reuse-it";
 
 import * as core from "@actions/core";
@@ -10,7 +11,7 @@ import * as artifact from "@actions/artifact";
 import * as fs from "fs";
 
 import { GitSource } from "../datasources";
-import { validateFiles, validateSBOM } from "../validator";
+import { validate } from "../validator";
 
 /**
  * Uploads the SBOM to GitHub Artifacts.
@@ -36,41 +37,20 @@ async function run(): Promise<void> {
     const files = await datasource.getFiles();
     await sbom.addFiles(files);
 
-    const projectResults = validateSBOM(sbom, await datasource.getLicenseFiles());
-    let errorCount = 0;
+    const results = validate(sbom);
 
-    if (projectResults.errors.length > 0) {
-      errorCount += projectResults.errors.length;
-      core.startGroup(`❌ The Project '${sbom.name}'`);
-      projectResults.errors.forEach(error =>
-        core.error(error, {
-          title: "REUSE Compliance",
-          file: projectResults.file.fileName,
-        })
-      );
-      core.endGroup();
-    }
-
-    const results = validateFiles(sbom);
-    results
-      .filter(result => !result.compliant)
-      .forEach(result => {
-        errorCount += result.errors.length;
-        core.startGroup(`❌ ${result.file.fileName}`);
-        result.errors.forEach(error =>
-          core.error(error, {
-            title: "REUSE Compliance",
-            file: result.file.fileName,
-          })
-        );
-        core.endGroup();
-      });
-
-    if (errorCount === 0) {
+    if (results.errorCount === 0) {
       await uploadSBOM(sbom);
       core.info(`✅ Found no REUSE compliance issues.`);
     } else {
-      core.setFailed(`❌ Found ${errorCount} REUSE compliance issues.`);
+      for (const error of diagnostics.extractFromSarif(results.log)) {
+        core.error(error.toString(), {
+          title: "REUSE Compliance",
+          file: error.toJSON().id,
+        });
+      }
+      console.info();
+      core.setFailed(`❌ Found ${results.errorCount} REUSE compliance issues.`);
     }
   } catch (ex) {
     core.setFailed((ex as Error).message);

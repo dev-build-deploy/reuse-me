@@ -73,46 +73,6 @@ class GitSource {
 
     return await this.listFiles(rootPath);
   }
-
-  /**
-   * Read the first 1024 bytes of a file
-   * @param file The file to read
-   * @returns The first 1024 bytes of the file
-   * @throws Error if the file cannot be read
-   */
-  private readBuffer(file: string): string {
-    const stream = fs.createReadStream(file, {
-      flags: "r",
-      encoding: "utf-8",
-      fd: undefined,
-      mode: 666,
-      end: 1024,
-    });
-
-    let fileData = "";
-    stream.on("data", function (data) {
-      fileData += data;
-    });
-    stream.on("error", function () {
-      throw new Error(`Problem while reading file '${file}'}`);
-    });
-    stream.on("end", function () {
-      return fileData;
-    });
-
-    return fileData;
-  }
-
-  /**
-   * Retrieves the contents of the provided file.
-   * @param file The file to retrieve the contents of
-   * @returns The contents of the file
-   */
-  public async getFileContents(file: string, buffer?: boolean): Promise<string> {
-    if (fs.existsSync(file) === false) return "";
-    if (buffer) return this.readBuffer(file);
-    else return fs.readFileSync(file, "utf8");
-  }
 }
 
 export { GitSource };

@@ -4,209 +4,165 @@
  */
 
 import * as reuse from "@dev-build-deploy/reuse-it";
+import * as sarif from "@dev-build-deploy/sarif-it";
 
-import { ExpressiveMessage } from "@dev-build-deploy/diagnose-it";
+import * as tool from "./config/tool.json";
 import * as spdx from "./spdx";
+
 import * as fs from "fs";
-import { getIndividualLicences } from "./spdx";
+import { formatMessage, highlightMessage } from "./utils";
 
 /**
- * Requirement interface
- * @interface IRequirement
- * @member id Requirement identifier
- * @member description Description of the requirement
+ * Validates whether the provided file contains a SPDX Copyright header
  */
-interface IRequirement {
-  id: string;
-  description: string;
-}
-
-interface IFileRequirement extends IRequirement {
-  validate(spdxFile: reuse.SpdxFile): RequirementError | void;
-}
-
-interface IProjectRequirement extends IRequirement {
-  validate(sbom: reuse.SoftwareBillOfMaterials, licenses: string[]): RequirementError | void;
-}
-
-/**
- * Error thrown when a commit message does not meet the Conventional Commit specification.
- */
-export class RequirementError extends Error {
-  identifier: string;
-  description: string;
-  errors: ExpressiveMessage[] = [];
-
-  constructor(requirement: IRequirement, identifier: string) {
-    super();
-
-    this.identifier = identifier;
-    this.description = requirement.description;
-    this.message = `Non-compliant with the requirement ${requirement.id}`;
+function* missingCopyrightInformation(rule: sarif.Rule, spdxFile: reuse.SpdxFile): Generator<sarif.Result> {
+  if (spdx.hasValidCopyrightText(spdxFile) === false) {
+    yield new sarif.Result(highlightMessage(rule.get("shortDescription").text, "Copyright Information"), {
+      level: "error",
+      ruleId: "MissingCopyrightInformation",
+    }).addLocation({
+      physicalLocation: {
+        artifactLocation: {
+          uri: spdxFile.fileName,
+        },
+      },
+    });
   }
+}
 
-  /**
-   * Extends the output with another error message
-   * @param highlight String to highlight in the specification description
-   */
-  addError(highlight: string | string[], description?: string) {
-    this.errors.push(
-      new ExpressiveMessage()
-        .id(this.identifier)
-        .error(this.highlightString(description ? description : this.description, highlight))
+/**
+ * Validates wheter the provided file contains a SPDX license header
+ */
+function* missingLicenseInformation(rule: sarif.Rule, spdxFile: reuse.SpdxFile): Generator<sarif.Result> {
+  if (spdx.hasValidLicense(spdxFile) === false) {
+    yield new sarif.Result(highlightMessage(rule.get("shortDescription").text, "License Information"), {
+      level: "error",
+      ruleId: "MissingLicenseInformation",
+    }).addLocation({
+      physicalLocation: {
+        artifactLocation: {
+          uri: spdxFile.fileName,
+        },
+      },
+    });
+  }
+}
+
+/**
+ * Validates whether the provided SPDX (custom) license identifier is comform specifications.
+ */
+function* incorrectLicenseFormat(rule: sarif.Rule, spdxFile: reuse.SpdxFile): Generator<sarif.Result> {
+  const results: sarif.Result[] = [];
+
+  spdxFile.licenseInfoInFiles
+    .filter(license => license.startsWith("LicenseRef-"))
+    .filter(license => /^LicenseRef-[A-Za-z0-9\-.]+$/.test(license) === false)
+    .forEach(license => {
+      results.push(
+        new sarif.Result(
+          highlightMessage(
+            formatMessage(rule.get("shortDescription").text, license),
+            license,
+            'LicenseRef-[letters, numbers, ".", or "-"]'
+          ),
+          {
+            level: "error",
+            ruleId: "IncorrectLicenseFormat",
+          }
+        ).addLocation({
+          physicalLocation: {
+            artifactLocation: {
+              uri: spdxFile.fileName,
+            },
+          },
+        })
+      );
+    });
+
+  for (const result of results) {
+    yield result;
+  }
+}
+
+/**
+ * Validates whether all used SPDX licenses are represented in the LICENSES folder.
+ */
+function* MissingLicenseFile(rule: sarif.Rule, sbom: reuse.SoftwareBillOfMaterials): Generator<sarif.Result> {
+  const results: sarif.Result[] = [];
+
+  const allLicenses = sbom.files
+    .map(file => spdx.getIndividualLicences(file))
+    .flat()
+    .filter((value, index, array) => array.indexOf(value) === index);
+  const missingLicenses = allLicenses.filter(license => fs.existsSync(`./LICENSES/${license}.txt`) === false);
+
+  missingLicenses.forEach(license => {
+    results.push(
+      new sarif.Result(
+        highlightMessage(formatMessage(rule.get("shortDescription").text, license), "License File", license),
+        {
+          level: "error",
+          ruleId: "MissingLicense",
+        }
+      ).addLocation({
+        physicalLocation: {
+          artifactLocation: {
+            uri: sbom.name,
+          },
+        },
+      })
     );
-    this.message = this.errors.map(e => e.toString()).join("\n");
-  }
+  });
 
-  /**
-   * Highlights the substring(s) in the specified string in cyan.
-   * @param str original string
-   * @param substring substring(s) to highlight (in cyan)
-   * @returns string containing highlighted sections in cyan
-   */
-  private highlightString(str: string, substring: string | string[]) {
-    const HIGHLIGHT = "\x1b[1;36m";
-    const RESET = "\x1b[0m\x1b[1m";
-
-    // Ensure that we handle both single and multiple substrings equally
-    if (!Array.isArray(substring)) substring = [substring];
-
-    // Replace all instances of substring with a blue version
-    let result = str;
-    substring.forEach(sub => (result = result.replace(sub, `${HIGHLIGHT}${sub}${RESET}`)));
-    return result;
+  for (const result of results) {
+    yield result;
   }
 }
 
 /**
- * Each Covered File MUST have Copyright and Licensing Information associated with it
+ * Returns a list of rules and their corresponding validation function based on the provided mapping.
  */
-class FL01 implements IFileRequirement {
-  id = "FL01";
-  description = "Each Covered File MUST have Copyright and Licensing Information associated with it";
+function getRulesFromMapping<T>(mapping: T) {
+  const rules: {
+    rule: sarif.Rule;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    validate: any;
+  }[] = [];
 
-  validate(spdxFile: reuse.SpdxFile): RequirementError | void {
-    const error = new RequirementError(this, spdxFile.fileName);
-
-    if (spdx.hasValidCopyrightText(spdxFile) === false)
-      error.addError(["Each Covered File MUST have Copyright", "Information"]);
-    if (spdx.hasValidLicense(spdxFile) === false)
-      error.addError(["Each Covered File MUST have", "Licensing Information"]);
-    
-    if (error.errors.length > 0) return error;
+  if (!mapping || mapping.constructor !== Object) {
+    return rules;
   }
-}
 
-/**
- * The SPDX License Identifier (X) MUST be LicenseRef-[letters, numbers, ".", or "-"] as defined by the SPDX Specification
- */
-class FL02 implements IFileRequirement {
-  id = "FL02";
-  description =
-    'The SPDX License Identifier (X) MUST be LicenseRef-[letters, numbers, ".", or "-"] as defined by the SPDX Specification';
-
-  validate(spdxFile: reuse.SpdxFile): RequirementError | void {
-    const error = new RequirementError(this, spdxFile.fileName);
-
-    spdxFile.licenseInfoInFiles
-      .filter(license => license.startsWith("LicenseRef-"))
-      .filter(license => /^LicenseRef-[A-Za-z0-9\-.]+$/.test(license) === false)
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      .forEach(license => {
-        error.addError(
-          [license, "MUST be LicenseRef-", 'letters, numbers, ".", or "-"'],
-          `The SPDX License Identifier (${license}) MUST be LicenseRef-[letters, numbers, ".", or "-"] as defined by the SPDX Specification`
-        );
+  for (const rule of tool.driver.rules) {
+    if (Object.keys(mapping).includes(rule.name)) {
+      rules.push({
+        rule: new sarif.Rule(rule.name, rule),
+        validate: mapping[rule.name as keyof T],
       });
-
-    if (error.errors.length > 0) return error;
+    }
   }
+
+  return rules;
 }
 
-/**
- * The Project MUST include a License File for every license, but is missing (...)
- */
-class PR01 implements IProjectRequirement {
-  id = "PR01";
-  description = "The Project MUST include a License File for every license, but is missing (...)";
+type ProjectFunction = (rule: sarif.Rule, sbom: reuse.SoftwareBillOfMaterials) => Generator<sarif.Result>;
+type ProjectRequirementMap = { [key: string]: ProjectFunction };
+type FileFunction = (rule: sarif.Rule, spdxFile: reuse.SpdxFile) => Generator<sarif.Result>;
+type FileRequirementMap = { [key: string]: FileFunction };
+export function projectRequirements() {
+  const ruleMap: ProjectRequirementMap = {
+    MissingLicenseFile: MissingLicenseFile,
+  };
 
-  validate(sbom: reuse.SoftwareBillOfMaterials): RequirementError | void {
-    const error = new RequirementError(this, sbom.name);
-
-    const allLicenses = sbom.files
-      .map(file => getIndividualLicences(file))
-      .flat()
-      .filter((value, index, array) => array.indexOf(value) === index);
-    const missingLicenses = allLicenses.filter(license => fs.existsSync(`./LICENSES/${license}.txt`) === false);
-
-    missingLicenses.forEach(license => {
-      error.addError(
-        ["Project MUST include a License File for", license],
-        `The Project MUST include a License File for every license, but is missing ${license}`
-      );
-    });
-
-    if (error.errors.length > 0) return error;
-  }
+  return getRulesFromMapping<ProjectRequirementMap>(ruleMap);
 }
 
-/**
- * The Project MUST NOT include License Files (X) for licenses under which none of the files in the Project are licensed.
- */
-class PR02 implements IProjectRequirement {
-  id = "PR02";
-  description =
-    "The Project MUST NOT include License Files (X) for licenses under which none of the files in the Project are licensed.";
+export function fileRequirements() {
+  const ruleMap: FileRequirementMap = {
+    MissingCopyrightInformation: missingCopyrightInformation,
+    MissingLicenseInformation: missingLicenseInformation,
+    IncorrectLicenseFormat: incorrectLicenseFormat,
+  };
 
-  validate(sbom: reuse.SoftwareBillOfMaterials, licenses: string[]): RequirementError | void {
-    const error = new RequirementError(this, sbom.name);
-
-    const localLicenses = [...licenses];
-
-    sbom.files.forEach(file => {
-      getIndividualLicences(file).forEach(license => {
-        if (localLicenses.includes(`LICENSES/${license}.txt`) === true)
-          localLicenses.splice(localLicenses.indexOf(`LICENSES/${license}.txt`), 1);
-        if (localLicenses.length === 0) return;
-      });
-    });
-
-    localLicenses.forEach(license => {
-      const niceLicense = license.replace("LICENSES/", "").replace(".txt", "");
-      error.addError(
-        ["Project MUST NOT include License Files", niceLicense],
-        `The Project MUST NOT include License Files (${niceLicense}) under which none of the files in the Project are licensed`
-      );
-    });
-
-    if (error.errors.length > 0) return error;
-  }
+  return getRulesFromMapping<FileRequirementMap>(ruleMap);
 }
-
-/**
- * The Project MUST NOT include duplicate SPDX identifiers (...).
- */
-class PR03 implements IProjectRequirement {
-  id = "PR03";
-  description = "The Project MUST NOT include duplicate SPDX identifiers (...).";
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  validate(sbom: reuse.SoftwareBillOfMaterials, _licenses: string[]): RequirementError | void {
-    const error = new RequirementError(this, sbom.name);
-
-    const spdxIdentifiers = sbom.files.map(file => file.SPDXID);
-    spdxIdentifiers.forEach((value, index, array) => {
-      if (array.indexOf(value) !== index) {
-        error.addError(
-          ["Project MUST NOT include duplicate SPDX identifiers", value],
-          `The Project MUST NOT include duplicate SPDX identifiers (${value}).`
-        );
-      }
-    });
-
-    if (error.errors.length > 0) return error;
-  }
-}
-
-export const fileRequirements: IFileRequirement[] = [new FL01(), new FL02()];
-export const projectRequirements: IProjectRequirement[] = [new PR01(), new PR02(), new PR03()];
