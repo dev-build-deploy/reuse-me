@@ -12,5 +12,5 @@ branding:
   color: 'white'
 
 runs:
-  using: 'node16'
+  using: 'node20'
   main: 'lib/action/index.js'
