@@ -32,7 +32,7 @@
     "@dev-build-deploy/reuse-it": ">=0",
     "@dev-build-deploy/sarif-it": ">=0",
     "commander": ">=11",
-    "simple-git": "^3.19.0"
+    "simple-git": ">=3"
   },
   "devDependencies": {
     "@swc/jest": ">=0",
