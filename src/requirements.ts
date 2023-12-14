@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: MIT
  */
 
+import * as fs from "fs";
+
 import * as reuse from "@dev-build-deploy/reuse-it";
 import * as sarif from "@dev-build-deploy/sarif-it";
 
 import * as tool from "./config/tool.json";
 import * as spdx from "./spdx";
-
-import * as fs from "fs";
 import { formatMessage, highlightMessage } from "./utils";
 
 /**
@@ -122,7 +122,7 @@ function* MissingLicenseFile(rule: sarif.Rule, sbom: reuse.SoftwareBillOfMateria
 /**
  * Returns a list of rules and their corresponding validation function based on the provided mapping.
  */
-function getRulesFromMapping<T>(mapping: T) {
+function getRulesFromMapping<T>(mapping: T): { rule: sarif.Rule, validate: Generator<sarif.Result> }[] {
   const rules: {
     rule: sarif.Rule;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -149,7 +149,7 @@ type ProjectFunction = (rule: sarif.Rule, sbom: reuse.SoftwareBillOfMaterials) =
 type ProjectRequirementMap = { [key: string]: ProjectFunction };
 type FileFunction = (rule: sarif.Rule, spdxFile: reuse.SpdxFile) => Generator<sarif.Result>;
 type FileRequirementMap = { [key: string]: FileFunction };
-export function projectRequirements() {
+export function projectRequirements(): { rule: sarif.Rule, validate: Generator<sarif.Result> }[] {
   const ruleMap: ProjectRequirementMap = {
     MissingLicenseFile: MissingLicenseFile,
   };
@@ -157,7 +157,7 @@ export function projectRequirements() {
   return getRulesFromMapping<ProjectRequirementMap>(ruleMap);
 }
 
-export function fileRequirements() {
+export function fileRequirements(): { rule: sarif.Rule, validate: Generator<sarif.Result> }[] {
   const ruleMap: FileRequirementMap = {
     MissingCopyrightInformation: missingCopyrightInformation,
     MissingLicenseInformation: missingLicenseInformation,

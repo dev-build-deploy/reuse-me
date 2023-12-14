@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: MIT
  */
 
+import * as fs from "fs";
+
+import * as artifact from "@actions/artifact";
+import * as core from "@actions/core";
 import * as diagnostics from "@dev-build-deploy/diagnose-it";
 import * as reuse from "@dev-build-deploy/reuse-it";
-
-import * as core from "@actions/core";
-import * as artifact from "@actions/artifact";
-import * as fs from "fs";
 
 import { GitSource } from "../datasources";
 import { validate } from "../validator";
