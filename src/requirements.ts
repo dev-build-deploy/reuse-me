@@ -122,7 +122,8 @@ function* MissingLicenseFile(rule: sarif.Rule, sbom: reuse.SoftwareBillOfMateria
 /**
  * Returns a list of rules and their corresponding validation function based on the provided mapping.
  */
-function getRulesFromMapping<T>(mapping: T): { rule: sarif.Rule, validate: Generator<sarif.Result> }[] {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getRulesFromMapping<T>(mapping: T): { rule: sarif.Rule; validate: any }[] {
   const rules: {
     rule: sarif.Rule;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -149,7 +150,8 @@ type ProjectFunction = (rule: sarif.Rule, sbom: reuse.SoftwareBillOfMaterials) =
 type ProjectRequirementMap = { [key: string]: ProjectFunction };
 type FileFunction = (rule: sarif.Rule, spdxFile: reuse.SpdxFile) => Generator<sarif.Result>;
 type FileRequirementMap = { [key: string]: FileFunction };
-export function projectRequirements(): { rule: sarif.Rule, validate: Generator<sarif.Result> }[] {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function projectRequirements(): { rule: sarif.Rule; validate: any }[] {
   const ruleMap: ProjectRequirementMap = {
     MissingLicenseFile: MissingLicenseFile,
   };
@@ -157,7 +159,8 @@ export function projectRequirements(): { rule: sarif.Rule, validate: Generator<s
   return getRulesFromMapping<ProjectRequirementMap>(ruleMap);
 }
 
-export function fileRequirements(): { rule: sarif.Rule, validate: Generator<sarif.Result> }[] {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function fileRequirements(): { rule: sarif.Rule; validate: any }[] {
   const ruleMap: FileRequirementMap = {
     MissingCopyrightInformation: missingCopyrightInformation,
     MissingLicenseInformation: missingLicenseInformation,
