@@ -28,7 +28,7 @@
     "@actions/artifact": "^1",
     "@actions/core": ">=1",
     "@actions/github": ">=6",
-    "@dev-build-deploy/diagnose-it": "<1",
+    "@dev-build-deploy/diagnose-it": ">=1",
     "@dev-build-deploy/reuse-it": "<1",
     "@dev-build-deploy/sarif-it": "^0.1.0",
     "commander": "^10.0.1",
