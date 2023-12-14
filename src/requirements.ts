@@ -17,7 +17,7 @@ import { formatMessage, highlightMessage } from "./utils";
  */
 function* missingCopyrightInformation(rule: sarif.Rule, spdxFile: reuse.SpdxFile): Generator<sarif.Result> {
   if (spdx.hasValidCopyrightText(spdxFile) === false) {
-    yield new sarif.Result(highlightMessage(rule.get("shortDescription").text, "Copyright Information"), {
+    yield new sarif.Result(highlightMessage(rule.properties().shortDescription?.text ?? "", "Copyright Information"), {
       level: "error",
       ruleId: "MissingCopyrightInformation",
     }).addLocation({
@@ -35,7 +35,7 @@ function* missingCopyrightInformation(rule: sarif.Rule, spdxFile: reuse.SpdxFile
  */
 function* missingLicenseInformation(rule: sarif.Rule, spdxFile: reuse.SpdxFile): Generator<sarif.Result> {
   if (spdx.hasValidLicense(spdxFile) === false) {
-    yield new sarif.Result(highlightMessage(rule.get("shortDescription").text, "License Information"), {
+    yield new sarif.Result(highlightMessage(rule.properties().shortDescription?.text ?? "", "License Information"), {
       level: "error",
       ruleId: "MissingLicenseInformation",
     }).addLocation({
@@ -61,7 +61,7 @@ function* incorrectLicenseFormat(rule: sarif.Rule, spdxFile: reuse.SpdxFile): Ge
       results.push(
         new sarif.Result(
           highlightMessage(
-            formatMessage(rule.get("shortDescription").text, license),
+            formatMessage(rule.properties().shortDescription?.text ?? "", license),
             license,
             'LicenseRef-[letters, numbers, ".", or "-"]'
           ),
@@ -99,7 +99,11 @@ function* MissingLicenseFile(rule: sarif.Rule, sbom: reuse.SoftwareBillOfMateria
   missingLicenses.forEach(license => {
     results.push(
       new sarif.Result(
-        highlightMessage(formatMessage(rule.get("shortDescription").text, license), "License File", license),
+        highlightMessage(
+          formatMessage(rule.properties().shortDescription?.text ?? "", license),
+          "License File",
+          license
+        ),
         {
           level: "error",
           ruleId: "MissingLicense",

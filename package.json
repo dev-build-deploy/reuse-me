@@ -29,8 +29,8 @@
     "@actions/core": ">=1",
     "@actions/github": ">=6",
     "@dev-build-deploy/diagnose-it": ">=1",
-    "@dev-build-deploy/reuse-it": "<1",
-    "@dev-build-deploy/sarif-it": "^0.1.0",
+    "@dev-build-deploy/reuse-it": ">=0",
+    "@dev-build-deploy/sarif-it": ">=0",
     "commander": "^10.0.1",
     "simple-git": "^3.19.0"
   },

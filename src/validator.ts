@@ -57,14 +57,14 @@ export function validate(sbom: reuse.SoftwareBillOfMaterials): { errorCount: num
   const projectResults = validateSBOM(sbom);
   projectResults.results.forEach(res => {
     run.addResult(res);
-    errorCount += res.properties().occurrenceCount;
+    errorCount += res.properties()?.occurrenceCount ?? 0;
   });
 
   const results = validateFiles(sbom);
   results.forEach(result =>
     result.results.forEach(res => {
       run.addResult(res);
-      errorCount += res.properties().occurrenceCount;
+      errorCount += res.properties()?.occurrenceCount ?? 0;
     })
   );
 
