@@ -31,7 +31,7 @@
     "@dev-build-deploy/diagnose-it": ">=1",
     "@dev-build-deploy/reuse-it": ">=0",
     "@dev-build-deploy/sarif-it": ">=0",
-    "commander": "^10.0.1",
+    "commander": ">=11",
     "simple-git": "^3.19.0"
   },
   "devDependencies": {
