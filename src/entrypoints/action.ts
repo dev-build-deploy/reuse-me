@@ -46,7 +46,7 @@ async function run(): Promise<void> {
       for (const error of diagnostics.extractFromSarif(results.log)) {
         core.error(error.toString(), {
           title: "REUSE Compliance",
-          file: error.toJSON().id,
+          file: error.file,
         });
       }
       console.info();
