@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: MIT
  */
 
-import simpleGit from "simple-git";
-
-import * as path from "path";
 import * as fs from "fs";
+import * as path from "path";
+
+import simpleGit from "simple-git";
 
 /**
  * Git data source for determining which files need to be validated.
@@ -17,7 +17,7 @@ class GitSource {
   /**
    * Retrieves the name of the repository.
    */
-  public async getRepositoryName(): Promise<string> {
+  async getRepositoryName(): Promise<string> {
     return path.basename(await this.getRootPath());
   }
 
@@ -68,7 +68,7 @@ class GitSource {
    * @param context The context of the event
    * @returns The list of files that have been changed
    */
-  public async getFiles(): Promise<string[]> {
+  async getFiles(): Promise<string[]> {
     const rootPath = await this.getRootPath();
 
     return await this.listFiles(rootPath);

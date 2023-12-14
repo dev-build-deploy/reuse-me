@@ -5,10 +5,10 @@
  * SPDX-License-Identifier: MIT
  */
 
+import * as fs from "fs";
+
 import * as diagnostics from "@dev-build-deploy/diagnose-it";
 import * as reuse from "@dev-build-deploy/reuse-it";
-
-import * as fs from "fs";
 import { Command } from "commander";
 
 import { GitSource } from "../datasources";

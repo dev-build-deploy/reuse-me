@@ -12,7 +12,7 @@
  *
  * @returns Formatted string
  */
-export function formatMessage(str: string, ...val: string[]) {
+export function formatMessage(str: string, ...val: string[]): string {
   for (let index = 0; index < val.length; index++) {
     str = str.replace(`{${index}}`, val[index]);
   }
@@ -27,7 +27,7 @@ export function formatMessage(str: string, ...val: string[]) {
  * @param val Values to highlight
  * @returns Highlighted string
  */
-export function highlightMessage(str: string, ...val: string[]) {
+export function highlightMessage(str: string, ...val: string[]): string {
   val.forEach(value => {
     str = str.replace(value, `\x1b[36m${value}\x1b[0;1m`);
   });

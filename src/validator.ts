@@ -3,11 +3,10 @@
  * SPDX-License-Identifier: MIT
  */
 
-import * as tool from "./config/tool.json";
-
 import * as reuse from "@dev-build-deploy/reuse-it";
 import * as sarif from "@dev-build-deploy/sarif-it";
 
+import * as tool from "./config/tool.json";
 import { IValidationResult } from "./interfaces";
 import { fileRequirements, projectRequirements } from "./requirements";
 
