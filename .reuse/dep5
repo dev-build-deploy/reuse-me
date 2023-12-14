@@ -3,14 +3,29 @@ Upstream-Name: reuse-me
 Upstream-Contact: Kevin de Jong <monkaii@hotmail.com>
 Source: https://github.com/dev-build-deploy/reuse-me
 
-Files: test/fixtures/*
+
+Files: .eslintrc.json
+       .prettierrc.json
 Copyright: 2023 Kevin de Jong <monkaii@hotmail.com>
 License: CC0-1.0
+
+Files: package*.json
+       tsconfig.json
+Copyright: 2023 Kevin de Jong <monkaii@hotmail.com>
+License: MIT
+
+Files: .github/.commit-me.json
+Copyright: 2023 Kevin de Jong <monkaii@hotmail.com>
+License: CC0-1.0
+
+Files: docs/images/*.svg
+Copyright: 2023 Kevin de Jong <monkaii@hotmail.com>
+License: MIT
 
 Files: lib/**
 Copyright: 2023 Kevin de Jong <monkaii@hotmail.com>
 License: MIT
 
-Files: docs/images/*.svg
+Files: test/fixtures/*
 Copyright: 2023 Kevin de Jong <monkaii@hotmail.com>
-License: MIT
+License: CC0-1.0
