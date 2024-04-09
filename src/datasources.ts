@@ -6,7 +6,7 @@
 import * as fs from "fs";
 import * as path from "path";
 
-import simpleGit from "simple-git";
+import git from "simple-git";
 
 /**
  * Git data source for determining which files need to be validated.
@@ -27,7 +27,7 @@ class GitSource {
    */
   private async getRootPath(): Promise<string> {
     if (this.__ROOT_PATH === undefined) {
-      this.__ROOT_PATH = await simpleGit().revparse({
+      this.__ROOT_PATH = await git().revparse({
         "--show-toplevel": null,
       });
     }
@@ -51,8 +51,8 @@ class GitSource {
    */
   private async listFiles(rootPath: string): Promise<string[]> {
     try {
-      const tracked = await simpleGit().raw(["ls-files", "--exclude-standard", "--full-name", rootPath]);
-      const untracked = await simpleGit().raw(["ls-files", "--others", "--exclude-standard", "--full-name", rootPath]);
+      const tracked = await git().raw(["ls-files", "--exclude-standard", "--full-name", rootPath]);
+      const untracked = await git().raw(["ls-files", "--others", "--exclude-standard", "--full-name", rootPath]);
       const files = tracked + "\n" + untracked;
       // Remove the last empty line
       return files.split("\n").filter(file => {
