@@ -25,7 +25,7 @@
     "reuse-me": "./bin/reuse-me"
   },
   "dependencies": {
-    "@actions/artifact": "^1",
+    "@actions/artifact": "^2",
     "@actions/core": ">=1",
     "@actions/github": ">=6",
     "@dev-build-deploy/diagnose-it": ">=1",
