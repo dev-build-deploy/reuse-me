@@ -19,9 +19,9 @@ import { validate } from "../validator";
 
  */
 async function uploadSBOM(sbom: reuse.SoftwareBillOfMaterials): Promise<void> {
-  const client = artifact.create();
+  const client = new artifact.DefaultArtifactClient();
   fs.writeFileSync("sbom.json", JSON.stringify(sbom, null, 2));
-  await client.uploadArtifact("ReuseMe SBOM", ["sbom.json"], ".", { continueOnError: true });
+  await client.uploadArtifact("ReuseMe SBOM", ["sbom.json"], ".");
   core.info("Uploaded Software Bill of Materials to GitHub Artifacts.");
 }
 

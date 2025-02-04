@@ -18,14 +18,14 @@
     "build:cli": "ncc build -o lib/cli src/entrypoints/cli.ts",
     "build:action": "ncc build -o lib/action src/entrypoints/action.ts",
     "test": "jest --coverage",
-    "lint": "eslint --ext .ts src/ test/requirements.test.ts",
+    "lint": "eslint src/**/*.ts test/requirements.test.ts",
     "format": "prettier --write **/*.ts && prettier --write **/**/*.ts"
   },
   "bin": {
     "reuse-me": "./bin/reuse-me"
   },
   "dependencies": {
-    "@actions/artifact": "^1",
+    "@actions/artifact": "^2",
     "@actions/core": ">=1",
     "@actions/github": ">=6",
     "@dev-build-deploy/diagnose-it": ">=1",
@@ -35,6 +35,9 @@
     "simple-git": ">=3"
   },
   "devDependencies": {
+    "@eslint/compat": "^1.2.6",
+    "@eslint/eslintrc": "^3.2.0",
+    "@eslint/js": "^9.19.0",
     "@swc/jest": ">=0",
     "@tsconfig/node20": "^20",
     "@types/jest": ">=29",
@@ -46,6 +49,7 @@
     "eslint-import-resolver-typescript": ">=3",
     "eslint-plugin-import": ">=2",
     "eslint-plugin-jest": ">=28",
+    "globals": "^15.14.0",
     "jest": ">=29",
     "npm-run-all2": ">=6",
     "prettier": ">=3",
