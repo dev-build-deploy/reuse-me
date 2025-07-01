@@ -4,4 +4,6 @@
 
 /lib/cli/index.js linguist-generated=true
 /lib/action/index.js linguist-generated=true
-/lib/probot/index.js linguist-generated=true
+
+lib/**/index.js -diff
+package-lock.json -diff
