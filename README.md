@@ -94,7 +94,18 @@ The `reuse-me` plugin keeps [Claude Code](https://claude.com/claude-code) from w
 
 ```
 /plugin marketplace add dev-build-deploy/claude-plugins
-/plugin install reuse-me@claude-plugins
+/plugin install reuse-me@dev-build-deploy
+```
+
+Or enable it for everyone working in a repository, in its `.claude/settings.json`:
+
+```json
+{
+  "extraKnownMarketplaces": {
+    "dev-build-deploy": { "source": { "source": "github", "repo": "dev-build-deploy/claude-plugins" } }
+  },
+  "enabledPlugins": { "reuse-me@dev-build-deploy": true }
+}
 ```
 
 Or straight from this repository, without the marketplace: `claude --plugin-dir ./claude-plugin`.
