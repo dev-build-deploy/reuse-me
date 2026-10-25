@@ -1,0 +1,8 @@
+{
+  "name": "reuse-me",
+  "version": "0.1.0",
+  "description": "Claude Code companion of ReuseMe: every new file Claude writes gets its REUSE (SPDX) copyright and licence header, from the rules the repository keeps in .reuse-me.json",
+  "author": { "name": "Kevin de Jong" },
+  "homepage": "https://github.com/dev-build-deploy/reuse-me",
+  "license": "MIT"
+}

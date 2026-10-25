@@ -1,0 +1,5 @@
+{
+  "rules": [],
+  "defaults": { "holder": "Kevin de Jong <monkaii@hotmail.com>", "license": "MIT" },
+  "exclude": ["lib/**", "node_modules/**", "package-lock.json"]
+}

@@ -28,3 +28,7 @@ License: MIT
 Files: test/fixtures/*
 Copyright: 2023 Kevin de Jong <monkaii@hotmail.com>
 License: CC0-1.0
+
+Files: .reuse-me.json claude-plugin/.claude-plugin/plugin.json claude-plugin/hooks/hooks.json
+Copyright: 2025 Kevin de Jong <monkaii@hotmail.com>
+License: MIT
