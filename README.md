@@ -88,6 +88,32 @@ $ reuse-me
 
 _You can find more details in the [dedicated documentation](./docs/cli.md)_
 
+## Claude Code plugin
+
+The `reuse-me` plugin keeps [Claude Code](https://claude.com/claude-code) from writing a file CI would reject: when Claude creates a new file, a hook adds the SPDX header (in the file's comment syntax, after a shebang, XML declaration, doctype or front matter) with the copyright and licence your repository's rules give for that path. Pictures, fonts and other files covered by `REUSE.toml` or `.reuse/dep5` get no header, existing files are left as they are, and a path without a rule is denied with `no licence rule for <path>: add one to .reuse-me.json`. A `reuse-compliance` skill explains headers, annotations, the `LICENSES/` folder and what the ReuseMe check looks for.
+
+```
+/plugin marketplace add dev-build-deploy/claude-plugins
+/plugin install reuse-me@claude-plugins
+```
+
+Or straight from this repository, without the marketplace: `claude --plugin-dir ./claude-plugin`.
+
+The rules live in `.reuse-me.json` in your repository root (first matching rule wins):
+
+```json
+{
+  "rules": [
+    { "paths": ["engine/**"], "holder": "Kevin de Jong <monkaii@hotmail.com>", "year": 2024, "license": "MPL-2.0" },
+    { "paths": ["games/**"],  "holder": "Kevin de Jong <monkaii@hotmail.com>", "license": "LicenseRef-Proprietary" }
+  ],
+  "defaults": { "holder": "Kevin de Jong <monkaii@hotmail.com>" },
+  "exclude": ["vendor/**"]
+}
+```
+
+`holder` is a string or a list (the year is prefixed unless given), `year` defaults to the current year, `defaults` apply when no rule matches (without a default licence the only file in `LICENSES/` is used), `exclude` paths are never touched. The plugin is glue: ReuseMe stays the deterministic check in CI. Its tests run with `claude plugin test claude-plugin`.
+
 ## Help?
 
 For more support, please refer to our [Basic guidelines](./docs/guidelines.md) or the excellent [REUSE FAQ](https://reuse.software/faq/)
