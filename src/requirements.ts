@@ -8,9 +8,9 @@ import * as fs from "fs";
 import * as reuse from "@dev-build-deploy/reuse-it";
 import * as sarif from "@dev-build-deploy/sarif-it";
 
-import * as tool from "./config/tool.json";
-import * as spdx from "./spdx";
-import { formatMessage, highlightMessage } from "./utils";
+import tool from "./config/tool.js";
+import * as spdx from "./spdx.js";
+import { formatMessage, highlightMessage } from "./utils.js";
 
 /**
  * Validates whether the provided file contains a SPDX Copyright header

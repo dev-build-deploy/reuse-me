@@ -11,8 +11,8 @@ import * as diagnostics from "@dev-build-deploy/diagnose-it";
 import * as reuse from "@dev-build-deploy/reuse-it";
 import { Command } from "commander";
 
-import { GitSource } from "../datasources";
-import { validate } from "../validator";
+import { GitSource } from "../datasources.js";
+import { validate } from "../validator.js";
 
 const program = new Command();
 

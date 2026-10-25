@@ -4,8 +4,9 @@
  */
 
 import * as reuse from "@dev-build-deploy/reuse-it";
+import { describe, expect, test } from "@jest/globals";
 
-import * as validator from "../src/validator";
+import * as validator from "../src/validator.js";
 
 describe("Validate Requirements", () => {
   test("No errors", async () => {
