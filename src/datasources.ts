@@ -6,7 +6,7 @@
 import * as fs from "fs";
 import * as path from "path";
 
-import git from "simple-git";
+import { simpleGit as git } from "simple-git";
 
 /**
  * Git data source for determining which files need to be validated.
@@ -58,7 +58,7 @@ class GitSource {
       return files.split("\n").filter(file => {
         return file.trim() && fs.existsSync(file) && !fs.lstatSync(file).isDirectory();
       });
-    } catch (GitError) {
+    } catch {
       return [];
     }
   }
