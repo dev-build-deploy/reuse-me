@@ -33,7 +33,7 @@
     "@dev-build-deploy/reuse-it": ">=0",
     "@dev-build-deploy/sarif-it": ">=0",
     "commander": "^12.1.0",
-    "simple-git": ">=3"
+    "simple-git": ">=4"
   },
   "devDependencies": {
     "@eslint/compat": "^1.2.6",
