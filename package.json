@@ -2,6 +2,7 @@
   "name": "reuse-me",
   "version": "0.0.1",
   "private": true,
+  "type": "module",
   "description": "Copyright and License management solutions for GitHub",
   "author": "Kevin de Jong",
   "license": "MIT",
@@ -18,32 +19,31 @@
     "check:bundle": "node scripts/check-bundle.mjs lib",
     "build:cli": "ncc build -o lib/cli src/entrypoints/cli.ts",
     "build:action": "ncc build -o lib/action src/entrypoints/action.ts",
-    "test": "jest --coverage",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",
     "lint": "eslint src/**/*.ts test/requirements.test.ts",
     "format": "prettier --write **/*.ts && prettier --write **/**/*.ts",
-    "prepare": "node -e \"if(process.env.CI)process.exit(0);const r=require('child_process').spawnSync('pre-commit',['install','--hook-type','pre-commit','--hook-type','commit-msg'],{stdio:'inherit'});if(r.error)console.log('hint: install pre-commit (https://pre-commit.com) to get the git hooks')\""
+    "prepare": "node -e \"if(process.env.CI)process.exit(0);const r=require('child_process').spawnSync('pre-commit',['install','--hook-type','pre-commit','--hook-type','commit-msg'],{stdio:'inherit'});if(r.error)console.log('hint: install pre-commit (https://pre-commit.com) to get the git hooks')\"",
+    "test:bin": "node scripts/smoke-bin.mjs"
   },
   "bin": {
     "reuse-me": "./bin/reuse-me"
   },
   "dependencies": {
     "@actions/artifact": "^2",
-    "@actions/core": ">=1",
-    "@actions/github": ">=6",
+    "@actions/core": "^3",
+    "@actions/github": "^9",
     "@dev-build-deploy/diagnose-it": ">=1",
     "@dev-build-deploy/reuse-it": ">=0",
     "@dev-build-deploy/sarif-it": ">=0",
-    "commander": "^12.1.0",
+    "commander": "^15",
     "simple-git": ">=3"
   },
   "devDependencies": {
     "@eslint/compat": "^1.2.6",
     "@eslint/eslintrc": "^3.2.0",
     "@eslint/js": "^9.19.0",
-    "@swc/jest": ">=0",
-    "@tsconfig/node20": "^20",
     "@types/jest": ">=29",
-    "@types/node": "^20",
+    "@types/node": "^24",
     "@typescript-eslint/eslint-plugin": ">=7",
     "@typescript-eslint/parser": ">=7",
     "@vercel/ncc": ">=0",
@@ -56,9 +56,10 @@
     "npm-run-all2": ">=6",
     "prettier": ">=3",
     "ts-jest": ">=29",
-    "typescript": ">=5"
+    "typescript": "^5",
+    "@jest/globals": "^29"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=24"
   }
 }

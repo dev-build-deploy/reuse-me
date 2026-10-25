@@ -5,7 +5,7 @@ SPDX-License-Identifier: MIT
 
 # Specifications
 
-ReuseMe currently has implemented two sets of [validation rules](../src/config/tool.json):
+ReuseMe currently has implemented two sets of [validation rules](../src/config/tool.ts):
 
 ## Individual Files
 

@@ -6,9 +6,9 @@
 import * as reuse from "@dev-build-deploy/reuse-it";
 import * as sarif from "@dev-build-deploy/sarif-it";
 
-import * as tool from "./config/tool.json";
-import { IValidationResult } from "./interfaces";
-import { fileRequirements, projectRequirements } from "./requirements";
+import tool from "./config/tool.js";
+import { IValidationResult } from "./interfaces.js";
+import { fileRequirements, projectRequirements } from "./requirements.js";
 
 /**
  * Validates all files against requirements related to File contents

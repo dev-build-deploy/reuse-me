@@ -10,8 +10,8 @@ import * as core from "@actions/core";
 import * as diagnostics from "@dev-build-deploy/diagnose-it";
 import * as reuse from "@dev-build-deploy/reuse-it";
 
-import { GitSource } from "../datasources";
-import { validate } from "../validator";
+import { GitSource } from "../datasources.js";
+import { validate } from "../validator.js";
 
 /**
  * Uploads the SBOM to GitHub Artifacts.
