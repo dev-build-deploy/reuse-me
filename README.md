@@ -49,7 +49,7 @@ You can add ReuseMe as a [pre-commit](https://pre-commit.com) by:
 ```yaml
 repos:
 - repo: https://github.com/dev-build-deploy/reuse-me
-  rev: v1.1.0
+  rev: v1.2.1
   hooks:
   - id: reuse-me
 ```
@@ -57,6 +57,9 @@ repos:
 ```
 $ pre-commit install
 ```
+
+The hook validates the staged files pre-commit passes to it; when the commit changes `.reuse/dep5`, a `REUSE.toml` or a
+file in `LICENSES/`, it validates every tracked file.
 
 ## CICD validation (GitHub Actions)
 
@@ -80,10 +83,12 @@ _You can find more details in the [dedicated documentation](./docs/github-action
 
 ## Local Development (Command Line Interface)
 
-Performing local validation is as simple as running the `reuse-me` CLI tool;
+Performing local validation is as simple as running the `reuse-me` CLI tool, which validates every file `git` tracks
+(or only the files you name);
 
 ```sh
 $ reuse-me
+$ reuse-me src/new-file.ts
 ```
 
 _You can find more details in the [dedicated documentation](./docs/cli.md)_

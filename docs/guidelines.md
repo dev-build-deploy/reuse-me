@@ -8,7 +8,7 @@ SPDX-License-Identifier: MIT
 ## Adding licensing and copyright information to your file
 Per the [Reuse specification], you can cover your files with the following approaches:
 
-- Adding a [comment header](#https://reuse.software/spec/#comment-headers) in your files;
+- Adding a [comment header](https://reuse.software/spec-3.3/#comment-headers) in your files;
 <!-- REUSE-IgnoreStart -->
 ```yaml
 SPDX-FileCopyrightText: 2023 Kevin de Jong <monkaii@hotmail.com>
@@ -16,8 +16,9 @@ SPDX-License-Identifier: GPL-3.0-or-later
 ```
 <!-- REUSE-IgnoreEnd -->
 
-- Adding a `.license` file next to your (binary) files
-- Using [DEP5](https://reuse.software/spec/#dep5) allows for specifying copyright and licensing in bulk
+- Adding a `.license` file next to your (binary) files; it takes precedence over the file's own comment header
+- Using [DEP5](https://reuse.software/spec-3.3/#dep5-deprecated) (`.reuse/dep5`) allows for specifying copyright and
+  licensing in bulk
 
 _Please refer to the [Reuse specification] for more details._
 
@@ -38,11 +39,7 @@ SPDX-FileContributor: Kevin de Jong
 
 ## Ignoring false positive matches
 
-ReuseMe attempts to limit the number of false positive hits by;
-- Only scanning the first 1024 characters of your files
-- Ensure that `SPDX-` tags are the first words on a line
-
-In case you do run into a false-positive match, you can use the `REUSE-IgnoreStart` and `REUSE-IgnoreEnd` tags to ignore snippets.
+In case you run into a false-positive match, you can use the `REUSE-IgnoreStart` and `REUSE-IgnoreEnd` tags to ignore snippets.
 
 ```typescript
 function foo(bar: string) {
@@ -56,4 +53,4 @@ function foo(bar: string) {
 }
 ```
 
-[Reuse specification]: https://reuse.software/spec/
+[Reuse specification]: https://reuse.software/spec-3.3/

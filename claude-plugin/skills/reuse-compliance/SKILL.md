@@ -10,7 +10,7 @@ SPDX-License-Identifier: MIT
 
 # REUSE compliance with ReuseMe
 
-ReuseMe (CI: `dev-build-deploy/reuse-me`) fails a pull request when a file has no copyright or no licence, when `LICENSES/` lacks a licence a file uses (PR001), or holds one nothing uses (PR002). The `reuse-me` plugin hook keeps Claude from causing that: it adds the header to every new file it writes that can hold one, and makes sure the rest is covered by `.reuse/dep5`.
+ReuseMe (CI: `dev-build-deploy/reuse-me`) fails a pull request when a file has no copyright or no licence, or when `LICENSES/` lacks a licence a file uses (PR001). The `reuse-me` plugin hook keeps Claude from causing that: it adds the header to every new file it writes that can hold one, and makes sure the rest is covered by `.reuse/dep5`.
 
 ## Headers first, annotations only where a header cannot go
 
