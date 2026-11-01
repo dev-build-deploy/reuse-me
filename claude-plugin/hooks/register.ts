@@ -6,13 +6,20 @@ import type { Register } from 'claude-code'
 /**
  * Claude Code companion of ReuseMe: a new file written by Claude gets its REUSE header.
  *
+ * In-file headers win over annotations: a file with a comment syntax always gets the header, even when
+ * `.reuse/dep5` or REUSE.toml covers its path, so its licence stays traceable when the file leaks. Only files
+ * that cannot hold a comment (pictures, fonts, JSON, binaries) are left to `.reuse/dep5`.
+ *
  * The rules come from `.reuse-me.json` in the repository root (see README, "Claude Code plugin").
  * ReuseMe itself stays the deterministic check in CI; this hook only keeps Claude from writing
  * a file that check would reject.
  */
 
 type Rule = { paths: string[]; holder?: string | string[]; year?: string | number; license?: string }
-type Config = { rules?: Rule[]; defaults?: Omit<Rule, 'paths'>; exclude?: string[] }
+/** `dep5`: what to do with a new comment-less file no annotation covers (`deny`, the default, or `append`). */
+type Config = {
+  rules?: Rule[]; defaults?: Omit<Rule, 'paths'>; exclude?: string[]; dep5?: 'deny' | 'append'; sidecars?: boolean
+}
 
 type Style = { line?: string; block?: [string, string] }
 const HASH: Style = { line: '# ' }
@@ -34,14 +41,10 @@ const STYLES: Record<string, Style> = {
 const BASENAMES: Record<string, string> = {
   Makefile: 'mk', Dockerfile: 'dockerfile', CMakeLists: 'cmake', Brewfile: 'sh', Gemfile: 'rb',
 }
-// Formats that cannot carry a comment (or are binary): REUSE covers them with an annotation or a `.license` file.
+// Formats that cannot carry a comment (or are binary): REUSE covers them with an annotation.
 const NO_COMMENT = new Set([
   'json', 'lock', 'txt', 'csv', 'png', 'jpg', 'jpeg', 'gif', 'webp', 'ico', 'bmp', 'pdf', 'wasm', 'ttf', 'otf',
   'woff', 'woff2', 'mp3', 'ogg', 'wav', 'mp4', 'webm', 'zip', 'gz', 'bin', 'dat', 'ipynb', 'map',
-])
-const BINARY = new Set([
-  'png', 'jpg', 'jpeg', 'gif', 'webp', 'ico', 'bmp', 'pdf', 'wasm', 'ttf', 'otf', 'woff', 'woff2', 'mp3', 'ogg',
-  'wav', 'mp4', 'webm', 'zip', 'gz', 'bin', 'dat',
 ])
 
 const ALWAYS_COVERED = [/^LICENSES\//, /^\.reuse\//, /\.license$/, /(^|\/)REUSE\.toml$/, /^\.git\//]
@@ -67,11 +70,20 @@ export function globToRegExp(glob: string, crossing = false): RegExp {
 
 export const matches = (globs: string[], rel: string, crossing = false) => globs.some(g => globToRegExp(g, crossing).test(rel))
 
-/** Paths REUSE.toml (`path = "..."`/`path = [...]`) or .reuse/dep5 (`Files:` stanzas) annotate. */
-export function annotatedGlobs(toml: string, dep5: string): { toml: string[]; dep5: string[] } {
-  const t: string[] = []
-  for (const m of toml.matchAll(/^\s*path\s*=\s*(\[[^\]]*\]|"[^"]*"|'[^']*')/gm)) {
-    for (const s of m[1].matchAll(/"([^"]*)"|'([^']*)'/g)) t.push(s[1] ?? s[2])
+type TomlAnnotation = { paths: string[]; precedence: string }
+
+/**
+ * What REUSE.toml (`[[annotations]]` with `path` and `precedence`) and .reuse/dep5 (`Files:` stanzas) annotate.
+ * `precedence` defaults to `closest`, where an in-file header wins over the annotation.
+ */
+export function annotations(toml: string, dep5: string): { toml: TomlAnnotation[]; dep5: string[] } {
+  const t: TomlAnnotation[] = []
+  for (const block of toml.split(/^\s*\[\[annotations\]\]\s*$/m).slice(1)) {
+    const paths: string[] = []
+    const m = block.match(/^\s*path\s*=\s*(\[[^\]]*\]|"[^"]*"|'[^']*')/m)
+    if (m) for (const s of m[1].matchAll(/"([^"]*)"|'([^']*)'/g)) paths.push(s[1] ?? s[2])
+    const prec = block.match(/^\s*precedence\s*=\s*["']([^"']*)["']/m)
+    t.push({ paths, precedence: prec ? prec[1] : 'closest' })
   }
   const d: string[] = []
   const lines = dep5.split('\n')
@@ -82,6 +94,11 @@ export function annotatedGlobs(toml: string, dep5: string): { toml: string[]; de
     d.push(...text.split(/\s+/).filter(Boolean))
   }
   return { toml: t, dep5: d }
+}
+
+/** A `.reuse/dep5` stanza for one path (continuation lines indented, as the Debian format wants). */
+export function dep5Stanza(rel: string, holders: string[], license: string): string {
+  return `Files: ${rel}\nCopyright: ${holders.join('\n           ')}\nLicense: ${license}\n`
 }
 
 export function buildHeader(style: Style, holders: string[], license: string): string {
@@ -118,6 +135,9 @@ const EXT = (p: string) => {
   return (i < 0 ? '' : base.slice(i + 1)).toLowerCase() || (base.startsWith('.') ? base.slice(1).toLowerCase() : '')
 }
 
+const DEP5_FORMAT = 'Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/\n'
+const HEADER_PRESENT = /^\s*(?:\S{0,3}\s?)?SPDX-(?:FileCopyrightText|License-Identifier):/m
+
 export const register: Register = on => {
   on('tool.call', { tool: 'Write' }, async ($, e, next) => {
     const root = (await $.session.root()).replace(/\/$/, '')
@@ -143,33 +163,70 @@ export const register: Register = on => {
     }
     if (matches(config.exclude ?? [], rel)) return next(e)
 
-    const ann = annotatedGlobs(toml, dep5)
+    const ann = annotations(toml, dep5)
+    const inDep5 = matches(ann.dep5, rel, true)
+    const tomlHit = ann.toml.find(a => matches(a.paths, rel))
     const ext = EXT(rel)
-    // Covered by annotation (REUSE.toml, .reuse/dep5) or binary: no header.
-    if (matches(ann.toml, rel) || matches(ann.dep5, rel, true)) return next(e)
-    if (BINARY.has(ext)) return next(e)
+    const style = NO_COMMENT.has(ext) ? undefined : STYLES[ext]
+
+    // No comment syntax: the file is covered by an annotation (or a sidecar), never by a header.
+    if (!style) {
+      if (inDep5 || tomlHit || (await $.fs.exists(`${e.file_path}.license`))) return next(e)
+    }
 
     const rule = (config.rules ?? []).find(r => matches(r.paths, rel))
     const d = config.defaults ?? {}
     const holder = rule?.holder ?? d.holder
     const soleLicense = licenses.filter(f => f.name.endsWith('.txt'))
     const license = rule?.license ?? d.license ?? (soleLicense.length === 1 ? soleLicense[0].name.replace(/\.txt$/, '') : undefined)
-    if (!holder || !license) {
+    const alreadyHeaded = !!style && HEADER_PRESENT.test(e.content.slice(0, 2048))
+    if ((!holder || !license) && !alreadyHeaded) {
       return { deny: `reuse-me: no licence rule for ${rel}: add one to .reuse-me.json ({"rules":[{"paths":["${rel.includes('/') ? rel.split('/')[0] + '/**' : rel}"],"holder":"Name <email>","license":"<SPDX id>"}]})` }
     }
     const year = String(rule?.year ?? d.year ?? new Date().getFullYear())
-    const holders = (Array.isArray(holder) ? holder : [holder]).map(h => (/^\d{4}/.test(h) ? h : `${year} ${h}`))
+    const holders = holder ? (Array.isArray(holder) ? holder : [holder]).map(h => (/^\d{4}/.test(h) ? h : `${year} ${h}`)) : []
 
-    // A header already there: pass.
-    if (/^\s*(?:\S{0,3}\s?)?SPDX-(?:FileCopyrightText|License-Identifier):/m.test(e.content.slice(0, 2048))) return next(e)
-
-    const style = STYLES[ext]
-    if (!style || NO_COMMENT.has(ext)) {
-      // No comment syntax: a `.license` file next to it covers it.
-      await $.fs.write(`${e.file_path}.license`, buildHeader({ line: '' }, holders, license))
-      $.ui.toast(`reuse-me: wrote ${rel}.license`)
+    if (!style) {
+      const plan = planUncovered({ root, rel, dep5, toml, config, holders, license: license as string })
+      if ('deny' in plan) return plan
+      await $.fs.write(plan.write, plan.content)
+      $.ui.toast(plan.toast)
       return next(e)
     }
-    return next({ ...e, content: insertHeader(e.content, ext, buildHeader(style, holders, license)) })
+
+    // A comment syntax: the header goes in the file, even when an annotation covers the path too, so the
+    // licence travels with the file when it is copied out of the repository.
+    const content = alreadyHeaded ? e.content : insertHeader(e.content, ext, buildHeader(style, holders, license as string))
+    const doubled = inDep5 ? '.reuse/dep5' : tomlHit && tomlHit.precedence !== 'closest' ? `REUSE.toml (precedence = "${tomlHit.precedence}")` : ''
+    const ran = await next({ ...e, content })
+    if (!doubled || ran.deny !== undefined) return ran
+    const warning = `reuse-me: ${rel} now carries its own SPDX header, and ${doubled} also covers it: ` +
+      (inDep5 ? 'REUSE adds both up (two licences in the SBOM). ' : 'the annotation does not yield to the header. ') +
+      `Drop this path from ${inDep5 ? '.reuse/dep5' : 'that REUSE.toml annotation'} (narrow its glob) so the header is the one source.`
+    $.ui.toast(`reuse-me: ${rel} is also covered by ${inDep5 ? '.reuse/dep5' : 'REUSE.toml'}`)
+    return { ...ran, context: [...(ran.context ?? []), warning] }
   }).catch(($, e, next) => (next.called ? next(e) : { deny: 'reuse-me: the licence guard failed; not writing an unlicensed file' }))
+}
+
+type Uncovered = { root: string; rel: string; dep5: string; toml: string; config: Config; holders: string[]; license: string }
+type Plan = { deny: string } | { write: string; content: string; toast: string }
+
+/**
+ * A new file without comment syntax that no annotation covers needs a `.reuse/dep5` stanza. Denied with the stanza
+ * to add (the default: some repositories generate dep5, and a hand edit would be lost), appended when
+ * `.reuse-me.json` says `"dep5": "append"`, or covered by a `.license` sidecar when it says `"sidecars": true`.
+ */
+export function planUncovered(u: Uncovered): Plan {
+  const stanza = dep5Stanza(u.rel, u.holders, u.license)
+  if (u.config.sidecars === true) {
+    return { write: `${u.root}/${u.rel}.license`, content: buildHeader({ line: '' }, u.holders, u.license), toast: `reuse-me: wrote ${u.rel}.license` }
+  }
+  if (u.config.dep5 === 'append' && (u.dep5 || !u.toml)) {
+    const base = u.dep5 ? u.dep5.replace(/\n*$/, '\n') : DEP5_FORMAT
+    return { write: `${u.root}/.reuse/dep5`, content: `${base}\n${stanza}`, toast: `reuse-me: added ${u.rel} to .reuse/dep5` }
+  }
+  const where = !u.dep5 && u.toml
+    ? `REUSE.toml has no annotation for it: add one ([[annotations]] path = "${u.rel}", SPDX-FileCopyrightText = "${u.holders.join('", "')}", SPDX-License-Identifier = "${u.license}")`
+    : `add this stanza to .reuse/dep5 (or set "dep5": "append" in .reuse-me.json to let the hook do it):\n\n${stanza}`
+  return { deny: `reuse-me: ${u.rel} cannot hold a comment header and nothing covers it; ${where}` }
 }
