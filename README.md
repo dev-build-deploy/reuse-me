@@ -49,7 +49,7 @@ You can add ReuseMe as a [pre-commit](https://pre-commit.com) by:
 ```yaml
 repos:
 - repo: https://github.com/dev-build-deploy/reuse-me
-  rev: v1.2.1
+  rev: v1.3.0
   hooks:
   - id: reuse-me
 ```
