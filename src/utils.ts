@@ -34,3 +34,14 @@ export function highlightMessage(str: string, ...val: string[]): string {
 
   return str;
 }
+
+/**
+ * The tool name for the SBOM's creation information (SPDX "Tool: name-version"). The version is only known when
+ * running as a GitHub Action (the ref it was used with, e.g. v1); the CLI does not carry its release version.
+ *
+ * @returns "reuse-me-<ref>" in a GitHub Action, "reuse-me" otherwise
+ */
+export function toolName(): string {
+  const ref = process.env.GITHUB_ACTION_REF;
+  return ref ? `reuse-me-${ref}` : "reuse-me";
+}

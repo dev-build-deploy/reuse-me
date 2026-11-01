@@ -6,12 +6,14 @@
  */
 
 import * as fs from "fs";
+import * as path from "path";
 
 import * as diagnostics from "@dev-build-deploy/diagnose-it";
 import * as reuse from "@dev-build-deploy/reuse-it";
 import { Command } from "commander";
 
 import { GitSource } from "../datasources";
+import { toolName } from "../utils";
 import { validate } from "../validator";
 
 const program = new Command();
@@ -22,16 +24,21 @@ const program = new Command();
 program
   .name("reuse-me")
   .description("Copyright and License management CLI tool")
+  .argument("[files...]", "Files to validate (default: every file git tracks)")
   .option("-s, --sbom-output <file>", "Output path for the Software Bill of Materials (SBOM).")
   .option("-c, --sarif-output <file>", "Output path for the SARIF file.")
-  .action(async options => {
+  .action(async (only: string[], options) => {
     console.log("📄 ReuseMe - REUSE compliance validation");
     console.log("----------------------------------------");
     console.log();
 
     const datasource = new GitSource();
-    const sbom = new reuse.SoftwareBillOfMaterials(await datasource.getRepositoryName(), "reuse-me@v0");
-    const files = await datasource.getFiles();
+    const files = await datasource.getFiles(only);
+    const outputs = [options.sarifOutput, options.sbomOutput].map(file => file && path.resolve(file));
+
+    // File paths are relative to the repository root, which is where .reuse/dep5 and LICENSES/ are found
+    process.chdir(await datasource.getRootPath());
+    const sbom = new reuse.SoftwareBillOfMaterials(await datasource.getRepositoryName(), toolName());
     await sbom.addFiles(files);
 
     const results = validate(sbom);
@@ -47,13 +54,13 @@ program
 
     if (options.sarifOutput) {
       console.log(`✏️  Writing SARIF file...`);
-      fs.writeFileSync(options.sarifOutput, JSON.stringify(results.log.properties(), null, 2));
+      fs.writeFileSync(outputs[0], JSON.stringify(results.log.properties(), null, 2));
     }
 
     if (options.sbomOutput) {
       if (results.errorCount === 0) {
         console.log(`✏️  Writing Software Bill of Materials file...`);
-        fs.writeFileSync(options.sbomOutput, JSON.stringify(sbom, null, 2));
+        fs.writeFileSync(outputs[1], JSON.stringify(sbom, null, 2));
       } else {
         console.log(`⚠️  Skipping Software Bill of Materials file...`);
       }
