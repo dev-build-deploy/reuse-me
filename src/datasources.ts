@@ -69,24 +69,46 @@ class GitSource {
   }
 
   /**
+   * Whether getFiles(only) returns every tracked file, i.e. the whole project is validated: no files were given, or a
+   * given file is REUSE configuration.
+   *
+   * @param only Files to validate instead of all tracked files
+   */
+  async coversProject(only?: string[]): Promise<boolean> {
+    await this.getRootPath();
+    if (only === undefined || only.length === 0) return true;
+    const files = only.map(file => this.toRepositoryPath(file));
+    return files.some(file => REUSE_CONFIGURATION.some(pattern => pattern.test(file)));
+  }
+
+  /**
+   * Turns a path relative to the base directory (or an absolute path) into a path relative to the repository root
+   * (call getRootPath first)
+   * @param file The path to convert
+   */
+  private toRepositoryPath(file: string): string {
+    return path
+      .relative(this.rootPath ?? this.baseDir, path.resolve(this.baseDir, file))
+      .split(path.sep)
+      .join("/");
+  }
+
+  /**
    * Determines which files to validate: every file git tracks, or only the given files (e.g. the staged files passed
    * by a pre-commit hook). When a given file is REUSE configuration (.reuse/dep5, a REUSE.toml, or a file in
    * LICENSES/), every tracked file is validated, as the change can affect any of them.
    *
    * @param only Files to validate instead of all tracked files; relative to the base directory, or absolute
-   * @returns Paths relative to the repository root
+   * @returns Paths relative to the repository root, each once
    */
   async getFiles(only?: string[]): Promise<string[]> {
-    const rootPath = await this.getRootPath();
-    if (only === undefined || only.length === 0) {
+    if (await this.coversProject(only)) {
       return this.listTrackedFiles();
     }
 
-    const files = only.map(file => path.relative(rootPath, path.resolve(this.baseDir, file)).split(path.sep).join("/"));
-    if (files.some(file => REUSE_CONFIGURATION.some(pattern => pattern.test(file)))) {
-      return this.listTrackedFiles();
-    }
-
+    // Each file once: the SBOM identifies a file by the hash of its path, so a file given twice (e.g. "a.ts ./a.ts")
+    // would produce duplicate SPDX identifiers and an invalid SBOM
+    const files = [...new Set((only ?? []).map(file => this.toRepositoryPath(file)))];
     return files.filter(file => !file.startsWith("../") && this.isFile(file));
   }
 }

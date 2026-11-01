@@ -1,7 +1,6 @@
 {
   "driver": {
     "name": "reuse-me",
-    "version": "0",
     "organization": "dev-build-deploy",
     "informationUri": "https://github.com/dev-build-deploy/reuse-me#README.md",  
     "rules": [
@@ -39,18 +38,10 @@
       },
       {
         "id": "PR002",
-        "name": "IncorrectLicenseFile",
+        "name": "UnusedLicenseFile",
         "shortDescription": {
           "text": "The Project MUST NOT include License Files ({0}) for licenses under which none of the files in the Project are licensed.",
           "markdown": "The Project **MUST NOT** include License Files (`<LICENSE>`) for licenses under which none of the files in the Project are licensed."
-        }
-      },
-      {
-        "id": "PR003",
-        "name": "DuplicateSpdxIdentifiers",
-        "shortDescription": {
-          "text": "The Project MUST NOT include duplicate SPDX identifiers ({0}).",
-          "markdown": "The Project **MUST NOT** include duplicate SPDX identifiers (`<ID>`)."
         }
       }
     ]

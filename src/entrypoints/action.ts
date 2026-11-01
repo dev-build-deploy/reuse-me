@@ -40,7 +40,7 @@ async function run(): Promise<void> {
     const files = await datasource.getFiles();
     await sbom.addFiles(files);
 
-    const results = validate(sbom);
+    const results = validate(sbom, { complete: true });
 
     if (results.errorCount === 0) {
       await uploadSBOM(sbom);

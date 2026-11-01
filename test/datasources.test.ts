@@ -77,6 +77,19 @@ describe("GitSource", () => {
     expect(files).toEqual(["staged.ts", "src/nested.ts"]);
   });
 
+  test("checks a file given twice once", async () => {
+    const files = await new GitSource(root).getFiles(["staged.ts", "./staged.ts", path.join(root, "staged.ts")]);
+    expect(files).toEqual(["staged.ts"]);
+  });
+
+  test("covers the project when no files are given, or a given file is REUSE configuration", async () => {
+    const source = new GitSource(root);
+    expect(await source.coversProject()).toBe(true);
+    expect(await source.coversProject([])).toBe(true);
+    expect(await source.coversProject(["staged.ts", "LICENSES/MIT.txt"])).toBe(true);
+    expect(await source.coversProject(["staged.ts", "src/nested.ts"])).toBe(false);
+  });
+
   test("checks every tracked file when a given file is REUSE configuration", async () => {
     for (const config of ["LICENSES/MIT.txt", ".reuse/dep5", "REUSE.toml", "src/REUSE.toml"]) {
       const files = await new GitSource(root).getFiles(["staged.ts", config]);

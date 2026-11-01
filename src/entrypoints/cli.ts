@@ -41,7 +41,7 @@ program
     const sbom = new reuse.SoftwareBillOfMaterials(await datasource.getRepositoryName(), toolName());
     await sbom.addFiles(files);
 
-    const results = validate(sbom);
+    const results = validate(sbom, { complete: await datasource.coversProject(only) });
 
     for (const error of diagnostics.extractFromSarif(results.log)) {
       console.log(error.toString());

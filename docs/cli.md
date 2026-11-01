@@ -55,7 +55,8 @@ $ reuse-me src/new-file.ts assets/logo.png
 ```
 
 When one of the given files is REUSE configuration (`.reuse/dep5`, a `REUSE.toml`, or a file in `LICENSES/`), every
-tracked file is validated, since such a change can affect any file.
+tracked file is validated, since such a change can affect any file. Only a run that validates every tracked file
+reports unused License Files ([PR002](./specifications.md#project)).
 
 <img src="./images/cli_example.svg">
 

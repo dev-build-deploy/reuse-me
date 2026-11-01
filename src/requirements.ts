@@ -4,6 +4,7 @@
  */
 
 import * as fs from "fs";
+import * as path from "path";
 
 import * as reuse from "@dev-build-deploy/reuse-it";
 import * as sarif from "@dev-build-deploy/sarif-it";
@@ -90,10 +91,7 @@ function* incorrectLicenseFormat(rule: sarif.Rule, spdxFile: reuse.SpdxFile): Ge
 function* MissingLicenseFile(rule: sarif.Rule, sbom: reuse.SoftwareBillOfMaterials): Generator<sarif.Result> {
   const results: sarif.Result[] = [];
 
-  const allLicenses = sbom.files
-    .map(file => spdx.getIndividualLicences(file))
-    .flat()
-    .filter((value, index, array) => array.indexOf(value) === index);
+  const allLicenses = [...new Set(sbom.files.flatMap(file => spdx.getLicenseFileIdentifiers(file)))];
   const missingLicenses = allLicenses.filter(license => fs.existsSync(`./LICENSES/${license}.txt`) === false);
 
   missingLicenses.forEach(license => {
@@ -120,6 +118,47 @@ function* MissingLicenseFile(rule: sarif.Rule, sbom: reuse.SoftwareBillOfMateria
 
   for (const result of results) {
     yield result;
+  }
+}
+
+/** The directory holding the License Files, relative to the repository root */
+const LICENSES_DIRECTORY = "LICENSES";
+
+/**
+ * Validates that every License File in the LICENSES folder is used by at least one file. Only meaningful when the SBOM
+ * holds every file of the project (see projectRequirements).
+ */
+function* UnusedLicenseFile(rule: sarif.Rule, sbom: reuse.SoftwareBillOfMaterials): Generator<sarif.Result> {
+  if (!fs.existsSync(LICENSES_DIRECTORY)) return;
+
+  const usedIdentifiers = new Set(sbom.files.flatMap(file => spdx.getLicenseFileIdentifiers(file)));
+  const licenseFiles = fs
+    .readdirSync(LICENSES_DIRECTORY)
+    .filter(entry => !entry.endsWith(".license"))
+    .filter(entry => fs.statSync(path.join(LICENSES_DIRECTORY, entry)).isFile())
+    .sort();
+
+  for (const licenseFile of licenseFiles) {
+    const identifier = path.parse(licenseFile).name;
+    if (usedIdentifiers.has(identifier)) continue;
+
+    yield new sarif.Result(
+      highlightMessage(
+        formatMessage(rule.properties().shortDescription?.text ?? "", identifier),
+        "License Files",
+        identifier
+      ),
+      {
+        level: "error",
+        ruleId: "UnusedLicenseFile",
+      }
+    ).addLocation({
+      physicalLocation: {
+        artifactLocation: {
+          uri: `${LICENSES_DIRECTORY}/${licenseFile}`,
+        },
+      },
+    });
   }
 }
 
@@ -154,10 +193,17 @@ type ProjectFunction = (rule: sarif.Rule, sbom: reuse.SoftwareBillOfMaterials) =
 type ProjectRequirementMap = { [key: string]: ProjectFunction };
 type FileFunction = (rule: sarif.Rule, spdxFile: reuse.SpdxFile) => Generator<sarif.Result>;
 type FileRequirementMap = { [key: string]: FileFunction };
+/**
+ * The requirements on the project as a whole.
+ * @param options.complete Whether the SBOM holds every file of the project. Rules that need the whole project (an
+ *                         unused License File can only be told apart from one used by a file outside a partial run)
+ *                         only apply when it does.
+ */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function projectRequirements(): { rule: sarif.Rule; validate: any }[] {
+export function projectRequirements(options: { complete: boolean }): { rule: sarif.Rule; validate: any }[] {
   const ruleMap: ProjectRequirementMap = {
     MissingLicenseFile: MissingLicenseFile,
+    ...(options.complete ? { UnusedLicenseFile: UnusedLicenseFile } : {}),
   };
 
   return getRulesFromMapping<ProjectRequirementMap>(ruleMap);

@@ -36,12 +36,22 @@ export function highlightMessage(str: string, ...val: string[]): string {
 }
 
 /**
- * The tool name for the SBOM's creation information (SPDX "Tool: name-version"). The version is only known when
- * running as a GitHub Action (the ref it was used with, e.g. v1); the CLI does not carry its release version.
+ * The version of reuse-me that is running. It is only known when running as a GitHub Action (the ref it was used
+ * with, e.g. v1); the CLI does not carry its release version (package.json is not bumped on release, releases are
+ * git tags only), and a made-up version would be worse than none.
  *
- * @returns "reuse-me-<ref>" in a GitHub Action, "reuse-me" otherwise
+ * @returns The ref of the GitHub Action, or undefined when unknown
+ */
+export function toolVersion(): string | undefined {
+  return process.env.GITHUB_ACTION_REF || undefined;
+}
+
+/**
+ * The tool name for the SBOM's creation information (SPDX "Tool: name-version").
+ *
+ * @returns "reuse-me-<version>" when the version is known (see toolVersion), "reuse-me" otherwise
  */
 export function toolName(): string {
-  const ref = process.env.GITHUB_ACTION_REF;
-  return ref ? `reuse-me-${ref}` : "reuse-me";
+  const version = toolVersion();
+  return version ? `reuse-me-${version}` : "reuse-me";
 }
