@@ -1,5 +1,7 @@
 // SPDX-FileCopyrightText: 2025 Kevin de Jong <monkaii@hotmail.com>
 // SPDX-License-Identifier: MIT
+// The tests below hold example SPDX headers in strings, which are not the licensing information of this file.
+// REUSE-IgnoreStart
 
 import { expect, test } from 'claude-code/testing'
 
@@ -151,3 +153,4 @@ test('an already headed file and an existing file pass unchanged', async ($, on)
   const b = await w(`${ROOT}/existing.c`, 'int new;\n')
   expect(b.seen.content).toBe('int new;\n')
 })
+// REUSE-IgnoreEnd
