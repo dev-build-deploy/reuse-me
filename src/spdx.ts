@@ -35,15 +35,19 @@ export function isReuseCompliant(file: reuse.SpdxFile): boolean {
   return hasValidLicense(file) && hasValidCopyrightText(file);
 }
 
+/** The operators of an SPDX License Expression; they are not license identifiers */
+const EXPRESSION_OPERATORS = ["AND", "OR", "WITH"];
+
 /**
- * Extracts all individual license names from the license information in file.
- * @param file SPDX file to extract the licenses from
- * @returns List of individual licenses
+ * Extracts every license and exception identifier from the license information in file, i.e. the names of the
+ * License Files in LICENSES/ that the file relies on ("Apache-2.0 WITH LLVM-exception" needs both Apache-2.0 and
+ * LLVM-exception).
+ * @param file SPDX file to extract the identifiers from
+ * @returns List of license and exception identifiers
  */
-export function getIndividualLicences(file: reuse.SpdxFile): string[] {
+export function getLicenseFileIdentifiers(file: reuse.SpdxFile): string[] {
   return file.licenseInfoInFiles
     .filter(license => license !== "NOASSERTION")
-    .map(license => license.split(/( AND | OR )/))
-    .flat()
-    .filter(license => license !== " AND " && license !== " OR ");
+    .flatMap(license => license.replace(/[()]/g, " ").split(/\s+/))
+    .filter(identifier => identifier.length > 0 && !EXPRESSION_OPERATORS.includes(identifier.toUpperCase()));
 }

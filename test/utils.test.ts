@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-import { toolName } from "../src/utils";
+import { toolName, toolVersion } from "../src/utils";
 
 describe("toolName", () => {
   const original = process.env.GITHUB_ACTION_REF;
@@ -21,5 +21,11 @@ describe("toolName", () => {
   test("carries the ref of the GitHub Action", () => {
     process.env.GITHUB_ACTION_REF = "v1";
     expect(toolName()).toBe("reuse-me-v1");
+    expect(toolVersion()).toBe("v1");
+  });
+
+  test("has no version outside a GitHub Action", () => {
+    delete process.env.GITHUB_ACTION_REF;
+    expect(toolVersion()).toBeUndefined();
   });
 });
